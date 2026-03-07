@@ -1,12 +1,15 @@
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
+import UnreadBadge from '@/components/UnreadBadge';
 
 export default async function AdminDashboardPage() {
   const supabase = await createClient();
   
+  const { data: { user } } = await supabase.auth.getUser();
+  
   const { data: orders } = await supabase
     .from('orders')
-    .select('*, profiles(first_name, last_name, email)')
+    .select('*, profiles(first_name, last_name, email), order_messages(created_at, sender_id)')
     .order('created_at', { ascending: false })
     .limit(10);
 
@@ -60,10 +63,24 @@ export default async function AdminDashboardPage() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-zinc-200">
-                {orders.map((order: any) => (
+                {orders.map((order: any) => {
+                  const messages = order.order_messages || [];
+                  const latestMessage = messages.length > 0 
+                    ? messages.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0] 
+                    : null;
+                    
+                  return (
                   <tr key={order.id}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-zinc-900">
                       {order.id.substring(0, 8)}...
+                      {user && (
+                        <UnreadBadge 
+                          orderId={order.id} 
+                          latestMessageAt={latestMessage?.created_at} 
+                          latestMessageSenderId={latestMessage?.sender_id} 
+                          currentUserId={user.id} 
+                        />
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-500">
                       {order.profiles?.first_name} {order.profiles?.last_name}
@@ -82,18 +99,35 @@ export default async function AdminDashboardPage() {
                       </Link>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>
 
           {/* Mobile Card View */}
           <div className="md:hidden space-y-4">
-            {orders.map((order: any) => (
+            {orders.map((order: any) => {
+              const messages = order.order_messages || [];
+              const latestMessage = messages.length > 0 
+                ? messages.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0] 
+                : null;
+                
+              return (
               <div key={order.id} className="bg-white rounded-xl shadow-sm border border-zinc-200 p-4">
                 <div className="flex justify-between items-start mb-3">
                   <div>
-                    <span className="text-xs font-mono text-zinc-500">#{order.id.substring(0, 8)}</span>
+                    <div className="flex items-center">
+                      <span className="text-xs font-mono text-zinc-500">#{order.id.substring(0, 8)}</span>
+                      {user && (
+                        <UnreadBadge 
+                          orderId={order.id} 
+                          latestMessageAt={latestMessage?.created_at} 
+                          latestMessageSenderId={latestMessage?.sender_id} 
+                          currentUserId={user.id} 
+                        />
+                      )}
+                    </div>
                     <h3 className="font-bold text-zinc-900">{order.profiles?.first_name} {order.profiles?.last_name}</h3>
                   </div>
                   <span className="px-2 py-1 text-xs font-semibold rounded-full bg-zinc-100 text-zinc-800">
@@ -111,7 +145,8 @@ export default async function AdminDashboardPage() {
                   </Link>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         </>
       ) : (

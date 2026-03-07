@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Send } from 'lucide-react';
+import { markOrderChatAsRead } from '@/lib/chat-utils';
 
 interface Message {
   id: string;
@@ -46,14 +47,14 @@ export default function OrderChat({ orderId, currentUserId, currentUserRole }: {
         schema: 'public',
         table: 'order_messages',
         filter: `order_id=eq.${orderId}`
-      }, (payload) => {
+      }, (payload: any) => {
         // Fetch the new message with profile data
         supabase
           .from('order_messages')
           .select('*, profiles(first_name, last_name, role)')
           .eq('id', payload.new.id)
           .single()
-          .then(({ data }) => {
+          .then(({ data }: { data: any }) => {
             if (data) {
               setMessages(prev => [...prev, data]);
             }
@@ -68,7 +69,11 @@ export default function OrderChat({ orderId, currentUserId, currentUserRole }: {
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    // Mark as read whenever messages change (or on mount)
+    if (messages.length > 0) {
+      markOrderChatAsRead(orderId);
+    }
+  }, [messages, orderId]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
