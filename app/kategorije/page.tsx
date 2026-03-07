@@ -44,9 +44,14 @@ export default async function CategoriesPage() {
                 )}
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {category.items?.filter((i: any) => i.is_active && i.type === 'base').map((item: any) => (
-                    <div key={item.id} className="bg-white p-6 rounded-2xl shadow-sm border border-zinc-200 flex flex-col">
-                      <h3 className="text-lg font-bold text-zinc-900 mb-2">{item.name}</h3>
+                  {category.items?.filter((i: any) => i.is_active).map((item: any) => (
+                    <div key={item.id} className="bg-white p-6 rounded-2xl shadow-sm border border-zinc-200 flex flex-col relative">
+                      {item.type === 'addon' && (
+                        <span className="absolute top-4 right-4 bg-amber-100 text-amber-800 text-xs font-bold px-2 py-1 rounded-lg">
+                          Dodatak
+                        </span>
+                      )}
+                      <h3 className="text-lg font-bold text-zinc-900 mb-2 pr-16">{item.name}</h3>
                       <p className="text-zinc-500 text-sm mb-4 flex-grow">{item.description}</p>
                       <div className="flex items-center justify-between mt-auto pt-4 border-t border-zinc-100">
                         <span className="text-xl font-bold text-zinc-900">{(item.price_cents / 100).toFixed(2)} €</span>

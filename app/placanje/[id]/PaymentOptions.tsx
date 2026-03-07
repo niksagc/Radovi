@@ -140,11 +140,20 @@ export default function PaymentOptions({ order: initialOrder, appSettings }: { o
       const fileName = `iban_proof_${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
       const filePath = `${order.id}/payments/${fileName}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from('orders')
-        .upload(filePath, ibanProof);
+      const formData = new FormData();
+      formData.append('file', ibanProof);
+      formData.append('filePath', filePath);
+      formData.append('bucket', 'orders');
 
-      if (uploadError) throw uploadError;
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Greška pri prijenosu potvrde');
+      }
 
       // Create payment record
       const { error: dbError } = await supabase.from('payments').insert({

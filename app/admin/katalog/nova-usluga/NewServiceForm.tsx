@@ -22,10 +22,10 @@ export default function NewServiceForm({ categories, initialCategoryId }: { cate
     const description = formData.get('description') as string;
     const price_cents = Math.round(parseFloat(formData.get('price') as string) * 100);
     const is_addon = formData.get('is_addon') === 'true';
+    const type = is_addon ? 'addon' : 'base';
     const is_active = formData.get('is_active') === 'true';
     const max_pages = formData.get('max_pages') ? parseInt(formData.get('max_pages') as string, 10) : null;
     const included_revisions = formData.get('included_revisions') ? parseInt(formData.get('included_revisions') as string, 10) : 0;
-    const delivery_time_days = formData.get('delivery_time_days') ? parseInt(formData.get('delivery_time_days') as string, 10) : null;
 
     try {
       const { error: insertError } = await supabase
@@ -35,11 +35,10 @@ export default function NewServiceForm({ categories, initialCategoryId }: { cate
           name,
           description,
           price_cents,
-          is_addon,
+          type,
           is_active,
           max_pages,
           included_revisions,
-          delivery_time_days,
         });
 
       if (insertError) throw insertError;
@@ -48,7 +47,7 @@ export default function NewServiceForm({ categories, initialCategoryId }: { cate
       router.refresh();
     } catch (err: any) {
       console.error('Error creating item:', err);
-      setError(err.message || 'Greška pri kreiranju usluge.');
+      setError(err.message || err.details || err.hint || 'Greška pri kreiranju usluge.');
     }
     
     setLoading(false);
@@ -107,7 +106,7 @@ export default function NewServiceForm({ categories, initialCategoryId }: { cate
           ></textarea>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-zinc-700 mb-1">Cijena (€) *</label>
             <input
@@ -128,15 +127,10 @@ export default function NewServiceForm({ categories, initialCategoryId }: { cate
               className="w-full rounded-xl border border-zinc-300 px-4 py-2 focus:ring-indigo-500 focus:border-indigo-500"
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-zinc-700 mb-1">Rok isporuke (dani)</label>
-            <input
-              type="number"
-              name="delivery_time_days"
-              min="1"
-              className="w-full rounded-xl border border-zinc-300 px-4 py-2 focus:ring-indigo-500 focus:border-indigo-500"
-            />
-          </div>
+        </div>
+        
+        <div className="bg-blue-50 text-blue-800 p-4 rounded-xl text-sm">
+          <strong>Napomena:</strong> Izrada je u roku 5-10 dana od potvrde narudžbe.
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

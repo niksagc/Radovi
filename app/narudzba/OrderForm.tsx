@@ -117,15 +117,19 @@ export default function OrderForm({ profile }: { profile: any }) {
         const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
         const filePath = `${order.id}/${kind}/${fileName}`;
 
-        const { error: uploadError } = await supabase.storage
-          .from('orders')
-          .upload(filePath, file);
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('filePath', filePath);
+        formData.append('bucket', 'orders');
 
-        if (uploadError) {
-          if (uploadError.message.includes('Bucket not found')) {
-            throw new Error('Spremnik za datoteke (Storage Bucket) nije pronađen. Molimo kliknite na "Inicijaliziraj testne podatke" na stranici za prijavu.');
-          }
-          throw uploadError;
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.error || 'Neuspješan prijenos datoteke');
         }
 
         const { error: dbError } = await supabase.from('files').insert({

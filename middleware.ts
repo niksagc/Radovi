@@ -50,7 +50,9 @@ export async function middleware(request: NextRequest) {
     
     if (authError) {
       // If there's an auth error (like invalid refresh token), we should treat the user as logged out
-      console.warn('Middleware auth error (handled):', authError.message);
+      if (authError.message !== 'Auth session missing!') {
+        console.warn('Middleware auth error (handled):', authError.message);
+      }
       user = null;
     } else {
       user = authUser;

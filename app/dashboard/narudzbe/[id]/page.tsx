@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
+import OrderChat from '@/components/OrderChat';
 
 export default async function OrderDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const supabase = await createClient();
@@ -84,7 +85,9 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
                         <svg className="w-5 h-5 text-zinc-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                         <span className="text-sm text-zinc-900">{file.filename}</span>
                       </div>
-                      <span className="text-xs text-zinc-500">{(file.size_bytes / 1024).toFixed(1)} KB</span>
+                      <a href={`/api/files/download?id=${file.id}`} className="text-xs font-medium text-indigo-600 hover:text-indigo-800">
+                        Preuzmi
+                      </a>
                     </li>
                   ))}
                 </ul>
@@ -119,6 +122,9 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
               )}
             </div>
           </div>
+          
+          {/* Chat Section */}
+          <OrderChat orderId={order.id} currentUserId={user.id} currentUserRole="student" />
         </div>
 
         <div className="space-y-8">

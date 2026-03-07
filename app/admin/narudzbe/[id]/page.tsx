@@ -2,10 +2,17 @@ import { createClient } from '@/lib/supabase/server';
 import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
 import OrderActions from './OrderActions';
+import OrderChat from '@/components/OrderChat';
 
 export default async function AdminOrderDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const supabase = await createClient();
   const resolvedParams = await params;
+  
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    redirect('/login');
+  }
   
   const { data: order } = await supabase
     .from('orders')
@@ -113,6 +120,9 @@ export default async function AdminOrderDetailsPage({ params }: { params: Promis
               )}
             </div>
           </div>
+          
+          {/* Chat Section */}
+          <OrderChat orderId={order.id} currentUserId={user.id} currentUserRole="admin" />
         </div>
 
         <div className="space-y-8">

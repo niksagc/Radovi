@@ -45,11 +45,20 @@ export default function ContactPage() {
         const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
         const filePath = `${contact.id}/${fileName}`;
 
-        const { error: uploadError } = await supabase.storage
-          .from('preorders')
-          .upload(filePath, file);
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('filePath', filePath);
+        formData.append('bucket', 'preorders');
 
-        if (uploadError) throw uploadError;
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.error || 'Greška pri prijenosu datoteke');
+        }
 
         const { error: dbError } = await supabase.from('files').insert({
           preorder_contact_id: contact.id,

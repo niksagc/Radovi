@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -19,6 +20,7 @@ export async function GET(request: Request) {
 
   let filePath = pathParam;
   let filename = 'download';
+  let bucket = 'orders';
 
   if (id) {
     const { data: file, error } = await supabase
@@ -38,12 +40,19 @@ export async function GET(request: Request) {
       .eq('id', user.id)
       .single();
 
-    if (profile?.role !== 'admin' && file.orders?.student_id !== user.id) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
+    if (file.preorder_contact_id) {
+      bucket = 'preorders';
+      if (profile?.role !== 'admin') {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
+    } else {
+      if (profile?.role !== 'admin' && file.orders?.student_id !== user.id) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
 
-    if (file.is_locked && profile?.role !== 'admin') {
-      return NextResponse.json({ error: 'File is locked pending payment' }, { status: 403 });
+      if (file.is_locked && profile?.role !== 'admin') {
+        return NextResponse.json({ error: 'File is locked pending payment' }, { status: 403 });
+      }
     }
 
     filePath = file.path;
@@ -54,9 +63,10 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Invalid file path' }, { status: 400 });
   }
 
-  // Generate signed URL
-  const { data, error: signedUrlError } = await supabase.storage
-    .from('orders')
+  // Generate signed URL using admin client since bucket RLS might not be configured
+  const supabaseAdmin = createAdminClient();
+  const { data, error: signedUrlError } = await supabaseAdmin.storage
+    .from(bucket)
     .createSignedUrl(filePath, 60, { download: filename });
 
   if (signedUrlError || !data) {

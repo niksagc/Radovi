@@ -1,15 +1,19 @@
 import type {Metadata} from 'next';
 import './globals.css'; // Global styles
+import AIAssistant from '@/components/AIAssistant';
 
 export const metadata: Metadata = {
-  title: 'My Google AI Studio App',
-  description: 'My Google AI Studio App',
+  title: 'StudyWorks',
+  description: 'Pomoć pri uređivanju i formatiranju školskih dokumenata',
 };
 
 export default function RootLayout({children}: {children: React.ReactNode}) {
   return (
-    <html lang="en">
-      <body suppressHydrationWarning>{children}</body>
+    <html lang="hr">
+      <body suppressHydrationWarning>
+        {children}
+        <AIAssistant />
+      </body>
     </html>
   );
 }

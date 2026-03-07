@@ -42,11 +42,20 @@ export default function OrderActions({ order }: { order: any }) {
       const fileName = `deliverable_${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
       const filePath = `${order.id}/deliverables/${fileName}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from('orders')
-        .upload(filePath, file);
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('filePath', filePath);
+      formData.append('bucket', 'orders');
 
-      if (uploadError) throw uploadError;
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Greška pri prijenosu datoteke');
+      }
 
       const { error: dbError } = await supabase.from('files').insert({
         order_id: order.id,
