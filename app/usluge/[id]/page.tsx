@@ -31,7 +31,7 @@ export default async function ServiceDetailsPage({ params }: { params: Promise<{
     .order('created_at', { ascending: false });
 
   const averageRating = reviews && reviews.length > 0
-  ? reviews.reduce((acc: number, review: { rating: number }) => acc + review.rating, 0) / reviews.length
+  ? reviews.reduce((acc: number, review: any) => acc + review.rating, 0) / reviews.length
   : 0;
 
   return (
