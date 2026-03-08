@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 
-export default function StudentSettingsForm({ initialProfile, initialSettings }: { initialProfile: any, initialSettings: any }) {
+export default function ProfileSettingsForm({ initialProfile, initialSettings }: { initialProfile: any, initialSettings: any }) {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);

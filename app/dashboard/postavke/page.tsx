@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
-import StudentSettingsForm from './StudentSettingsForm';
+import ProfileSettingsForm from '@/components/ProfileSettingsForm';
 import PaymentMethodsSettings from './PaymentMethodsSettings';
 
 export default async function StudentSettingsPage() {
@@ -31,7 +31,7 @@ export default async function StudentSettingsPage() {
       </div>
       
       <div className="bg-white p-4 md:p-8 rounded-2xl shadow-sm border border-zinc-200">
-        <StudentSettingsForm initialProfile={profile} initialSettings={settings} />
+        <ProfileSettingsForm initialProfile={profile} initialSettings={settings} />
         <PaymentMethodsSettings />
       </div>
     </div>

@@ -8,8 +8,10 @@ export default function AdminLayout({
 }) {
   return (
     <div className="min-h-screen bg-zinc-50 flex flex-col">
-      <AdminHeader logoutAction={logout} />
-      <main className="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
+      <div className="sticky top-0 z-50 w-full">
+        <AdminHeader logoutAction={logout} />
+      </div>
+      <main className="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 relative z-0">
         {children}
       </main>
     </div>

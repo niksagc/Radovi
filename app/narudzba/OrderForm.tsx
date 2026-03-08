@@ -5,12 +5,21 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
+import { validateReferralCode } from '@/lib/actions/referrals';
+
 export default function OrderForm({ profile }: { profile: any }) {
   const { items, subtotalCents, addonsTotalCents, totalCents, clearCart } = useCartStore();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const supabase = createClient();
+
+  // Referral state
+  const [referralCode, setReferralCode] = useState('');
+  const [referralDiscount, setReferralDiscount] = useState(0);
+  const [referralMessage, setReferralMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+  const [useCredits, setUseCredits] = useState(false);
+  const creditsAvailable = profile?.credits_cents || 0;
 
   // Form state
   const [formData, setFormData] = useState({
@@ -53,7 +62,16 @@ export default function OrderForm({ profile }: { profile: any }) {
 
       // 2. Calculate deposit/final
       // Default to 100% at creation, will be chosen at payment step
-      const depositCents = totalCents();
+      
+      let finalTotal = totalCents() - referralDiscount;
+      let creditsUsed = 0;
+      
+      if (useCredits) {
+        creditsUsed = Math.min(finalTotal, creditsAvailable);
+        finalTotal -= creditsUsed;
+      }
+      
+      const depositCents = finalTotal;
       const finalCents = 0;
 
       // 3. Create Order
@@ -74,10 +92,13 @@ export default function OrderForm({ profile }: { profile: any }) {
           revisions_included: revisionsIncluded,
           subtotal_cents: subtotalCents(),
           addons_total_cents: addonsTotalCents(),
-          total_cents: totalCents(),
+          total_cents: finalTotal,
           payment_model: '100%',
           deposit_cents: depositCents,
           final_cents: finalCents,
+          referral_code_used: referralDiscount > 0 ? referralCode : null,
+          referral_discount_cents: referralDiscount,
+          credits_used_cents: creditsUsed,
         })
         .select()
         .single();
@@ -341,9 +362,95 @@ export default function OrderForm({ profile }: { profile: any }) {
               <span>{(addonsTotalCents() / 100).toFixed(2)} €</span>
             </div>
           )}
+          
+          {/* Referral Code Input */}
+          <div className="pt-4 border-t border-zinc-200">
+            <label className="block text-sm font-medium text-zinc-700 mb-2">Kod preporuke</label>
+            <div className="flex space-x-2">
+              <input
+                type="text"
+                value={referralCode}
+                onChange={(e) => setReferralCode(e.target.value)}
+                className="flex-1 rounded-xl border border-zinc-300 px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500"
+                placeholder="Unesite kod"
+                disabled={referralDiscount > 0}
+              />
+              <button
+                type="button"
+                onClick={async () => {
+                  setReferralMessage(null);
+                  try {
+                    const result = await validateReferralCode(referralCode);
+                    if (result.valid) {
+                      setReferralDiscount(result.discountCents || 0);
+                      setReferralMessage({ type: 'success', text: 'Kod uspješno primijenjen! (-5.00 €)' });
+                    } else {
+                      setReferralDiscount(0);
+                      setReferralMessage({ type: 'error', text: result.message || 'Neispravan kod.' });
+                    }
+                  } catch (err) {
+                    setReferralMessage({ type: 'error', text: 'Greška pri provjeri koda.' });
+                  }
+                }}
+                disabled={referralDiscount > 0 || !referralCode}
+                className="bg-zinc-900 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-zinc-800 disabled:opacity-50"
+              >
+                Primijeni
+              </button>
+            </div>
+            {referralMessage && (
+              <p className={`mt-2 text-xs ${referralMessage.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
+                {referralMessage.text}
+              </p>
+            )}
+          </div>
+
+          {/* Credits Usage */}
+          {creditsAvailable > 0 && (
+            <div className="pt-4 border-t border-zinc-200">
+              <div className="flex items-center justify-between">
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={useCredits}
+                    onChange={(e) => setUseCredits(e.target.checked)}
+                    className="rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500"
+                  />
+                  <span className="text-sm text-zinc-700">Iskoristi kredite ({(creditsAvailable / 100).toFixed(2)} €)</span>
+                </label>
+              </div>
+            </div>
+          )}
+
+          {/* Discounts Display */}
+          {(referralDiscount > 0 || useCredits) && (
+            <div className="pt-4 border-t border-zinc-200 space-y-2">
+              {referralDiscount > 0 && (
+                <div className="flex justify-between text-green-600 text-sm">
+                  <span>Popust na preporuku</span>
+                  <span>-{(referralDiscount / 100).toFixed(2)} €</span>
+                </div>
+              )}
+              {useCredits && (
+                <div className="flex justify-between text-green-600 text-sm">
+                  <span>Iskorišteni krediti</span>
+                  <span>-{Math.min((totalCents() - referralDiscount), creditsAvailable) / 100} €</span>
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="border-t border-zinc-200 pt-4 flex justify-between items-center">
             <span className="text-lg font-bold text-zinc-900">Ukupno</span>
-            <span className="text-2xl font-extrabold text-indigo-600">{(totalCents() / 100).toFixed(2)} €</span>
+            <span className="text-2xl font-extrabold text-indigo-600">
+              {(() => {
+                let total = totalCents() - referralDiscount;
+                if (useCredits) {
+                  total -= Math.min(total, creditsAvailable);
+                }
+                return (Math.max(0, total) / 100).toFixed(2);
+              })()} €
+            </span>
           </div>
         </div>
 

@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import UnreadBadge from '@/components/UnreadBadge';
+import DeleteOrderButton from '@/components/DeleteOrderButton';
 
 export default async function AdminDashboardPage() {
   const supabase = await createClient();
@@ -10,6 +11,7 @@ export default async function AdminDashboardPage() {
   const { data: orders } = await supabase
     .from('orders')
     .select('*, profiles(first_name, last_name, email), order_messages(created_at, sender_id)')
+    .eq('deleted_by_admin', false)
     .order('created_at', { ascending: false })
     .limit(10);
 
@@ -94,9 +96,12 @@ export default async function AdminDashboardPage() {
                       {(order.total_cents / 100).toFixed(2)} €
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <Link href={`/admin/narudzbe/${order.id}`} className="text-indigo-600 hover:text-indigo-900">
-                        Upravljaj
-                      </Link>
+                      <div className="flex items-center justify-end space-x-2">
+                        <Link href={`/admin/narudzbe/${order.id}`} className="text-indigo-600 hover:text-indigo-900">
+                          Upravljaj
+                        </Link>
+                        <DeleteOrderButton orderId={order.id} userRole="admin" status={order.status} />
+                      </div>
                     </td>
                   </tr>
                   );
@@ -137,12 +142,15 @@ export default async function AdminDashboardPage() {
                 
                 <div className="flex justify-between items-center text-sm text-zinc-600 mb-4">
                   <span className="font-bold text-zinc-900">{(order.total_cents / 100).toFixed(2)} €</span>
-                  <Link 
-                    href={`/admin/narudzbe/${order.id}`}
-                    className="text-indigo-600 font-medium hover:text-indigo-800"
-                  >
-                    Upravljaj &rarr;
-                  </Link>
+                  <div className="flex items-center space-x-2">
+                    <Link 
+                      href={`/admin/narudzbe/${order.id}`}
+                      className="text-indigo-600 font-medium hover:text-indigo-800"
+                    >
+                      Upravljaj &rarr;
+                    </Link>
+                    <DeleteOrderButton orderId={order.id} userRole="admin" status={order.status} />
+                  </div>
                 </div>
               </div>
               );

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
+import { updateOrderStatus } from '@/lib/actions/orders';
 
 export default function OrderActions({ order }: { order: any }) {
   const [status, setStatus] = useState(order.status);
@@ -15,12 +16,7 @@ export default function OrderActions({ order }: { order: any }) {
   const handleStatusChange = async (newStatus: string) => {
     setLoading(true);
     try {
-      const { error } = await supabase
-        .from('orders')
-        .update({ status: newStatus })
-        .eq('id', order.id);
-
-      if (error) throw error;
+      await updateOrderStatus(order.id, newStatus);
       setStatus(newStatus);
       router.refresh();
     } catch (err) {

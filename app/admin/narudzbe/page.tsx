@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import UnreadBadge from '@/components/UnreadBadge';
+import DeleteOrderButton from '@/components/DeleteOrderButton';
 
 export default async function AdminOrdersPage() {
   const supabase = await createClient();
@@ -10,6 +11,7 @@ export default async function AdminOrdersPage() {
   const { data: orders } = await supabase
     .from('orders')
     .select('*, profiles(first_name, last_name, email), order_messages(created_at, sender_id)')
+    .eq('deleted_by_admin', false)
     .order('created_at', { ascending: false });
 
   return (
@@ -80,9 +82,12 @@ export default async function AdminOrdersPage() {
                       {(order.total_cents / 100).toFixed(2)} €
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <Link href={`/admin/narudzbe/${order.id}`} className="text-indigo-600 hover:text-indigo-900">
-                        Upravljaj
-                      </Link>
+                      <div className="flex items-center justify-end space-x-2">
+                        <Link href={`/admin/narudzbe/${order.id}`} className="text-indigo-600 hover:text-indigo-900">
+                          Upravljaj
+                        </Link>
+                        <DeleteOrderButton orderId={order.id} userRole="admin" status={order.status} />
+                      </div>
                     </td>
                   </tr>
                   );
@@ -132,12 +137,15 @@ export default async function AdminOrdersPage() {
                   </div>
                 </div>
 
-                <Link 
-                  href={`/admin/narudzbe/${order.id}`}
-                  className="block w-full text-center py-2 bg-indigo-50 text-indigo-700 font-medium rounded-lg hover:bg-indigo-100 transition-colors"
-                >
-                  Upravljaj narudžbom
-                </Link>
+                <div className="flex items-center space-x-2">
+                  <Link 
+                    href={`/admin/narudzbe/${order.id}`}
+                    className="block flex-1 text-center py-2 bg-indigo-50 text-indigo-700 font-medium rounded-lg hover:bg-indigo-100 transition-colors"
+                  >
+                    Upravljaj narudžbom
+                  </Link>
+                  <DeleteOrderButton orderId={order.id} userRole="admin" status={order.status} />
+                </div>
               </div>
               );
             })}

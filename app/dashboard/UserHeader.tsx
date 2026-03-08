@@ -12,6 +12,7 @@ export default function UserHeader({ logoutAction }: { logoutAction: () => Promi
   const navigation = [
     { name: 'Moje narudžbe', href: '/dashboard' },
     { name: 'Katalog usluga', href: '/kategorije' },
+    { name: 'Preporuči i zaradi', href: '/dashboard/preporuke' },
     { name: 'Postavke profila', href: '/dashboard/postavke' },
   ];
 
