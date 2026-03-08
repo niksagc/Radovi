@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
 import OrderChat from '@/components/OrderChat';
+import ReviewForm from '@/components/ReviewForm';
 
 export default async function OrderDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const supabase = await createClient();
@@ -27,6 +28,17 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
     redirect('/dashboard');
   }
 
+  // Check if already reviewed
+  const { data: existingReview } = await supabase
+    .from('reviews')
+    .select('id')
+    .eq('order_id', order.id)
+    .single();
+
+  // Find main service ID (first base item)
+  const mainServiceItem = order.order_items?.find((item: any) => item.type === 'base');
+  const serviceId = mainServiceItem ? mainServiceItem.item_id : null;
+
   return (
     <div>
       <div className="mb-6">
@@ -46,6 +58,11 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
           
+          {/* Review Section - Only if completed and not reviewed */}
+          {order.status === 'Završeno' && !existingReview && (
+            <ReviewForm orderId={order.id} serviceId={serviceId} />
+          )}
+
           <div className="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-zinc-200">
             <h2 className="text-xl font-bold text-zinc-900 mb-4">Detalji rada</h2>
             <div className="grid grid-cols-2 gap-4 text-sm">

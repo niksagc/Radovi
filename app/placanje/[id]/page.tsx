@@ -2,6 +2,8 @@ import { createClient } from '@/lib/supabase/server';
 import { notFound, redirect } from 'next/navigation';
 import PaymentOptions from './PaymentOptions';
 import Link from 'next/link';
+import UserHeader from '../../dashboard/UserHeader';
+import { logout } from '@/app/login/actions';
 
 export default async function PaymentPage({ params }: { params: Promise<{ id: string }> }) {
   const supabase = await createClient();
@@ -40,17 +42,11 @@ export default async function PaymentPage({ params }: { params: Promise<{ id: st
 
   return (
     <div className="min-h-screen bg-zinc-50 flex flex-col">
-      <header className="bg-white border-b border-zinc-200 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center">
-            <Link href="/" className="text-2xl font-bold text-indigo-600 tracking-tight">
-              StudyWorks
-            </Link>
-          </div>
-        </div>
-      </header>
+      <div className="sticky top-0 z-50 w-full">
+        <UserHeader logoutAction={logout} />
+      </div>
 
-      <main className="flex-grow max-w-3xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-12">
+      <main className="flex-grow max-w-3xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-12 relative z-0">
         <h1 className="text-4xl font-extrabold tracking-tight text-zinc-900 mb-8 text-center">
           Plaćanje
         </h1>

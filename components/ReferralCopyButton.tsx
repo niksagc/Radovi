@@ -8,7 +8,7 @@ export default function ReferralCopyButton({ code }: { code: string }) {
   const [canShare, setCanShare] = useState(false);
 
   useEffect(() => {
-    if (typeof navigator !== 'undefined' && navigator.share) {
+    if (typeof navigator !== 'undefined' && 'share' in navigator) {
       setTimeout(() => setCanShare(true), 0);
     }
   }, []);
