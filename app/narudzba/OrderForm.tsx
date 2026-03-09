@@ -168,9 +168,9 @@ export default function OrderForm({ profile }: { profile: any }) {
       if (clientUpload) await uploadFile(clientUpload, 'client_upload');
       if (schoolInstructions) await uploadFile(schoolInstructions, 'school_instructions');
 
-      // 6. Clear cart and redirect to payment
+      // 6. Clear cart and redirect to order details
       clearCart();
-      router.push(`/placanje/${order.id}`);
+      router.push(`/dashboard/narudzbe/${order.id}`);
 
     } catch (err: any) {
       console.error('Order creation error:', err);
