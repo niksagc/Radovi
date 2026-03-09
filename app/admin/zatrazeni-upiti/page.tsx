@@ -32,7 +32,7 @@ export default async function ZatrazeniUpitiPage() {
 
       <div className="space-y-6">
         {upiti && upiti.length > 0 ? (
-          upiti.map((upit) => (
+          upiti.map((upit: any) => (
             <div key={upit.id} className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
               <div className="p-6">
                 <div className="flex flex-wrap justify-between gap-4 mb-6">

@@ -13,7 +13,7 @@ export default async function AdminPagesList() {
   if (error && error.message.includes('public.pages')) {
     return (
       <div className="p-8 bg-red-50 border border-red-200 rounded-2xl text-red-700">
-        <h2 className="text-xl font-bold mb-2">Tablica "pages" nedostaje</h2>
+        <h2 className="text-xl font-bold mb-2">Tablica &quot;pages&quot; nedostaje</h2>
         <p className="mb-4">Sustav ne može pronaći tablicu za upravljanje stranicama u bazi podataka.</p>
         <p className="text-sm">Molimo pokrenite sljedeći SQL u svom Supabase SQL Editoru kako biste kreirali potrebnu tablicu:</p>
         <pre className="mt-4 p-4 bg-zinc-900 text-zinc-100 rounded-xl overflow-x-auto text-xs">
