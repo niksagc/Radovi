@@ -60,7 +60,7 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
           
           {/* Review Section - Only if completed and not reviewed */}
           {order.status === 'Završeno' && !existingReview && (
-            <ReviewForm orderId={order.id} serviceId={serviceId} />
+            <ReviewForm orderId={order.id} serviceId={serviceId} studentId={user.id} />
           )}
 
           <div className="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-zinc-200">
