@@ -1,8 +1,10 @@
 import Link from 'next/link';
+import Footer from '@/components/Footer';
 
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-zinc-50 flex flex-col">
+      {/* ... header ... */}
       <header className="bg-white border-b border-zinc-200 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center">
@@ -22,6 +24,7 @@ export default function HomePage() {
       </header>
 
       <main className="flex-grow flex items-center justify-center px-4 sm:px-6 lg:px-8 py-20">
+        {/* ... main content ... */}
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-zinc-900 mb-6">
             Profesionalna pomoć za vaše <span className="text-indigo-600">akademske radove</span>
@@ -58,11 +61,7 @@ export default function HomePage() {
         </div>
       </main>
       
-      <footer className="bg-white border-t border-zinc-200 py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-zinc-500 text-sm">
-          &copy; {new Date().getFullYear()} StudyWorks. Sva prava pridržana.
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

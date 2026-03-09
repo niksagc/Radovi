@@ -150,8 +150,19 @@ export default function OrderForm({ profile }: { profile: any }) {
         });
 
         if (!res.ok) {
-          const errorData = await res.json();
-          throw new Error(errorData.error || 'Neuspješan prijenos datoteke');
+          let errorMessage = 'Neuspješan prijenos datoteke';
+          try {
+            const errorData = await res.json();
+            errorMessage = errorData.error || errorMessage;
+          } catch (e) {
+            // If response is not JSON, it might be "Request Entity Too Large"
+            if (res.status === 413) {
+              errorMessage = 'Datoteka je prevelika. Maksimalna veličina je 10MB.';
+            } else {
+              errorMessage = `Greška na poslužitelju (${res.status})`;
+            }
+          }
+          throw new Error(errorMessage);
         }
 
         const { error: dbError } = await supabase.from('files').insert({

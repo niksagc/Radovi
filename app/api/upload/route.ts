@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 
+export const maxDuration = 60;
+
 export async function POST(request: Request) {
   try {
     const supabaseAuth = await createClient();

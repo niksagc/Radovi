@@ -49,8 +49,18 @@ export default function OrderActions({ order }: { order: any }) {
       });
 
       if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || 'Greška pri prijenosu datoteke');
+        let errorMessage = 'Greška pri prijenosu datoteke';
+        try {
+          const errorData = await res.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch (e) {
+          if (res.status === 413) {
+            errorMessage = 'Datoteka je prevelika. Maksimalna veličina je 10MB.';
+          } else {
+            errorMessage = `Greška na poslužitelju (${res.status})`;
+          }
+        }
+        throw new Error(errorMessage);
       }
 
       const { error: dbError } = await supabase.from('files').insert({

@@ -14,6 +14,7 @@ export default function AdminHeader({ logoutAction }: { logoutAction: () => Prom
     { name: 'Narudžbe', href: '/admin/narudzbe' },
     { name: 'Katalog', href: '/admin/katalog' },
     { name: 'Korisnici', href: '/admin/korisnici' },
+    { name: 'Stranice', href: '/admin/stranice' },
     { name: 'Postavke', href: '/admin/postavke' },
   ];
 
