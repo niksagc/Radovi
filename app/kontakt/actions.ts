@@ -78,9 +78,24 @@ export async function submitContactForm(formData: FormData) {
 
   // 3. Send emails
   try {
+    // Fetch admin email from settings
+    const { data: settings } = await supabaseAdmin
+      .from('app_settings')
+      .select('notification_emails')
+      .single();
+    
+    const adminEmail = settings?.notification_emails?.[0] || process.env.ADMIN_EMAIL || 'nikoladuric025@gmail.com';
+
     await Promise.all([
       sendPreorderConfirmationEmail({ email, name, subject }),
-      sendPreorderAdminNotificationEmail({ name, email, subject, message, deadline })
+      sendPreorderAdminNotificationEmail({ 
+        name, 
+        email, 
+        subject, 
+        message, 
+        deadline,
+        to: adminEmail
+      })
     ]);
   } catch (emailError) {
     // We don't want to fail the whole request if email fails, but we should log it

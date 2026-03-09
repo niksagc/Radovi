@@ -2,6 +2,8 @@ import { Resend } from 'resend';
 
 // Only initialize if the key is present
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+const FROM_EMAIL = process.env.FROM_EMAIL || 'onboarding@resend.dev';
+const FROM_NAME = process.env.FROM_NAME || 'StudyWorks';
 
 export async function sendEmail({
   to,
@@ -19,7 +21,7 @@ export async function sendEmail({
 
   try {
     const data = await resend.emails.send({
-      from: 'StudyWorks <onboarding@resend.dev>', // Default testing domain provided by Resend
+      from: `${FROM_NAME} <${FROM_EMAIL}>`,
       to,
       subject,
       html,
@@ -63,15 +65,17 @@ export async function sendPreorderAdminNotificationEmail({
   subject,
   message,
   deadline,
+  to,
 }: {
   name: string;
   email: string;
   subject: string;
   message: string;
   deadline?: string | null;
+  to?: string;
 }) {
-  // Get admin email from settings or env
-  const adminEmail = process.env.ADMIN_EMAIL || 'nikoladuric025@gmail.com';
+  // Get admin email from parameter, settings or env
+  const adminEmail = to || process.env.ADMIN_EMAIL || 'nikoladuric025@gmail.com';
 
   return sendEmail({
     to: adminEmail,
