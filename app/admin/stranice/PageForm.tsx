@@ -43,7 +43,11 @@ export default function PageForm({ initialData }: { initialData?: any }) {
       router.refresh();
     } catch (err: any) {
       console.error('Error saving page:', err);
-      setError(err.message || 'Greška pri spremanju stranice.');
+      let msg = err.message || 'Greška pri spremanju stranice.';
+      if (msg.includes('public.pages')) {
+        msg = 'Tablica "pages" nije pronađena u bazi podataka. Molimo kontaktirajte podršku ili pokrenite SQL migraciju za CMS stranice u Supabase SQL Editoru.';
+      }
+      setError(msg);
     } finally {
       setLoading(false);
     }

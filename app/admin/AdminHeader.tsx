@@ -12,6 +12,7 @@ export default function AdminHeader({ logoutAction }: { logoutAction: () => Prom
   const navigation = [
     { name: 'Nadzorna ploča', href: '/admin' },
     { name: 'Narudžbe', href: '/admin/narudzbe' },
+    { name: 'Zatražene ponude', href: '/admin/zatrazeni-upiti' },
     { name: 'Katalog', href: '/admin/katalog' },
     { name: 'Korisnici', href: '/admin/korisnici' },
     { name: 'Stranice', href: '/admin/stranice' },

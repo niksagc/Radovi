@@ -1,6 +1,7 @@
 'use server';
 
 import { createAdminClient } from '@/lib/supabase/admin';
+import { sendPreorderConfirmationEmail, sendPreorderAdminNotificationEmail } from '@/lib/email';
 
 export async function submitContactForm(formData: FormData) {
   const name = formData.get('name') as string;
@@ -73,6 +74,17 @@ export async function submitContactForm(formData: FormData) {
       console.error('File db insert error:', dbError);
       return { error: 'Greška pri spremanju podataka o datoteci: ' + dbError.message };
     }
+  }
+
+  // 3. Send emails
+  try {
+    await Promise.all([
+      sendPreorderConfirmationEmail({ email, name, subject }),
+      sendPreorderAdminNotificationEmail({ name, email, subject, message, deadline })
+    ]);
+  } catch (emailError) {
+    // We don't want to fail the whole request if email fails, but we should log it
+    console.error('Email notification error:', emailError);
   }
 
   return { success: true };

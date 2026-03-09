@@ -203,9 +203,35 @@ export async function GET(request: Request) {
   } catch (error: any) {
     console.error('Seed error:', error);
     
-    if (error.code === 'PGRST205' || (error.message && error.message.includes('profiles'))) {
+    // Check for missing tables
+    const { data: tables } = await supabase.rpc('get_tables'); // This might not work if rpc not defined
+    // Alternative: check if a simple query fails
+    const { error: pagesCheck } = await supabase.from('pages').select('id').limit(1);
+    const { error: profilesCheck } = await supabase.from('profiles').select('id').limit(1);
+    
+    if (pagesCheck?.code === 'PGRST204' || pagesCheck?.message?.includes('pages') ||
+        profilesCheck?.code === 'PGRST204' || profilesCheck?.message?.includes('profiles')) {
       return NextResponse.json({ 
-        error: 'Tablice nisu pronađene u bazi podataka. Molimo kopirajte sadržaj datoteke /supabase/migrations/0000_initial.sql i pokrenite ga u Supabase SQL Editoru.',
+        error: 'Neke tablice nedostaju u bazi podataka. Molimo kopirajte sljedeći SQL i pokrenite ga u Supabase SQL Editoru:',
+        sql: `
+-- Tablica za stranice (CMS)
+CREATE TABLE IF NOT EXISTS pages (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  title TEXT NOT NULL,
+  slug TEXT NOT NULL UNIQUE,
+  content TEXT NOT NULL,
+  is_published BOOLEAN DEFAULT false,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- RLS za stranice
+ALTER TABLE pages ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public can read published pages" ON pages FOR SELECT USING (is_published = true);
+CREATE POLICY "Admins have full access to pages" ON pages FOR ALL USING (
+  EXISTS (SELECT 1 FROM profiles WHERE profiles.id = auth.uid() AND profiles.role = 'admin')
+);
+        `,
         code: 'TABLES_MISSING'
       }, { status: 500 });
     }

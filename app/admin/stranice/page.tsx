@@ -5,10 +5,37 @@ import { Plus, Edit, Trash2, Eye, EyeOff } from 'lucide-react';
 export default async function AdminPagesList() {
   const supabase = await createClient();
   
-  const { data: pages } = await supabase
+  const { data: pages, error } = await supabase
     .from('pages')
     .select('*')
     .order('created_at', { ascending: false });
+
+  if (error && error.message.includes('public.pages')) {
+    return (
+      <div className="p-8 bg-red-50 border border-red-200 rounded-2xl text-red-700">
+        <h2 className="text-xl font-bold mb-2">Tablica "pages" nedostaje</h2>
+        <p className="mb-4">Sustav ne može pronaći tablicu za upravljanje stranicama u bazi podataka.</p>
+        <p className="text-sm">Molimo pokrenite sljedeći SQL u svom Supabase SQL Editoru kako biste kreirali potrebnu tablicu:</p>
+        <pre className="mt-4 p-4 bg-zinc-900 text-zinc-100 rounded-xl overflow-x-auto text-xs">
+{`CREATE TABLE IF NOT EXISTS pages (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  title TEXT NOT NULL,
+  slug TEXT NOT NULL UNIQUE,
+  content TEXT NOT NULL,
+  is_published BOOLEAN DEFAULT false,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+ALTER TABLE pages ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public can read published pages" ON pages FOR SELECT USING (is_published = true);
+CREATE POLICY "Admins have full access to pages" ON pages FOR ALL USING (
+  EXISTS (SELECT 1 FROM profiles WHERE profiles.id = auth.uid() AND profiles.role = 'admin')
+);`}
+        </pre>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
