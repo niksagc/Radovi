@@ -16,18 +16,44 @@ export async function register(formData: FormData) {
   
   const supabase = await createClient();
   
-  // Check if username exists
-  const { data: existingUser } = await supabase
-    .from('profiles')
-    .select('id')
-    .eq('username', username)
-    .single();
+  // Check if username exists using a direct query (allowed by public policy)
+  let usernameExists = false;
+  try {
+    const { data: profileData, error: checkError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('username', username)
+      .maybeSingle();
+      
+    if (checkError) {
+      console.error('Error checking username (Direct Query) Message:', checkError.message);
+      console.error('Error checking username (Direct Query) Code:', checkError.code);
+      
+      // Fallback: try RPC if direct query fails (unlikely if policy is correct)
+      const { data: rpcData, error: rpcError } = await supabase
+        .rpc('check_username_exists', { u: username });
+      
+      if (rpcError) {
+        console.error('Error checking username (RPC) Message:', rpcError.message);
+        console.error('Error checking username (RPC) Code:', rpcError.code);
+      } else {
+        usernameExists = !!rpcData;
+      }
+    } else {
+      usernameExists = !!profileData;
+    }
+  } catch (err) {
+    console.error('Unexpected error checking username:', err);
+  }
     
-  if (existingUser) {
+  if (usernameExists) {
     return { error: 'Korisničko ime je već zauzeto.' };
   }
   
-  const { data, error } = await supabase.auth.signUp({
+  console.log('Attempting signup for:', email);
+  
+  // First attempt: with full metadata
+  let { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
@@ -39,18 +65,46 @@ export async function register(formData: FormData) {
     }
   });
   
+  // Second attempt: if first fails with "Database error", try without metadata
+  if (error && (error.message.includes('Database error') || error.message.includes('saving new user'))) {
+    console.warn('Signup with metadata failed, retrying without metadata...');
+    const retry = await supabase.auth.signUp({
+      email,
+      password
+    });
+    data = retry.data;
+    error = retry.error;
+  }
+  
   if (error) {
-    return { error: error.message };
+    console.error('Signup error object:', JSON.stringify(error, null, 2));
+    
+    // If user already exists, try to sign in instead
+    if (
+      error.message.includes('User already registered') || 
+      error.status === 422 || 
+      error.code === 'user_already_exists' ||
+      (error.message.includes('Database error') && error.message.includes('duplicate key'))
+    ) {
+      console.log('User likely already exists, attempting signin...');
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      
+      if (!signInError) {
+        console.log('Signin successful after signup failure');
+        redirect('/dashboard');
+      }
+      
+      console.error('Signin error after signup failure:', signInError.message);
+      return { error: 'Korisnik već postoji s ovim e-mailom, ali lozinka je netočna.' };
+    }
+
+    console.error('Signup error message:', error.message);
+    return { error: `Greška pri registraciji: ${error.message}` };
   }
   
-  // The trigger will handle creating the profile, but we might need to update it with first/last name
-  if (data.user) {
-    await supabase.from('profiles').update({
-      first_name: firstName,
-      last_name: lastName,
-      username: username
-    }).eq('id', data.user.id);
-  }
-  
+  console.log('Signup successful, redirecting to dashboard');
   redirect('/dashboard');
 }

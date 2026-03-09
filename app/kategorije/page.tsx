@@ -11,12 +11,11 @@ export default async function CategoriesPage() {
   
   const { data: categories } = await supabase
     .from('categories')
-    .select('*')
-    .order('sort_order', { ascending: true });
+    .select('*, items(*)');
 
   const { data: items } = await supabase
     .from('items')
-    .select('*')
+    .select('*, categories(name)')
     .eq('is_active', true);
 
   return (
@@ -50,10 +49,7 @@ export default async function CategoriesPage() {
           Katalog usluga
         </h1>
         
-        <Catalog 
-          initialCategories={categories || []} 
-          initialItems={items || []} 
-        />
+        <Catalog categories={categories || []} items={items || []} />
       </main>
     </div>
   );

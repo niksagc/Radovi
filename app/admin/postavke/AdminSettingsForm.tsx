@@ -11,6 +11,47 @@ export default function AdminSettingsForm({ initialSettings }: { initialSettings
   const router = useRouter();
   const supabase = createClient();
 
+  const [testEmailLoading, setTestEmailLoading] = useState(false);
+  const [testEmailSuccess, setTestEmailSuccess] = useState<string | null>(null);
+  const [testEmailError, setTestEmailError] = useState<string | null>(null);
+
+  const handleTestEmail = async () => {
+    setTestEmailLoading(true);
+    setTestEmailSuccess(null);
+    setTestEmailError(null);
+
+    const emailInput = document.querySelector('input[name="notification_emails"]') as HTMLInputElement;
+    const email = emailInput?.value;
+
+    if (!email) {
+      setTestEmailError('Unesite email adresu za obavijesti prije testiranja.');
+      setTestEmailLoading(false);
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/admin/test-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        setTestEmailSuccess(data.message || 'Probni e-mail uspješno poslan!');
+      } else {
+        setTestEmailError(data.error || 'Došlo je do greške pri slanju e-maila.');
+      }
+    } catch (err: any) {
+      setTestEmailError('Greška u komunikaciji sa serverom.');
+    }
+
+    setTestEmailLoading(false);
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
@@ -62,13 +103,29 @@ export default function AdminSettingsForm({ initialSettings }: { initialSettings
 
       <div>
         <label className="block text-sm font-medium text-zinc-700 mb-1">Email za obavijesti</label>
-        <input
-          type="email"
-          name="notification_emails"
-          defaultValue={initialSettings?.notification_emails?.[0]}
-          required
-          className="w-full rounded-xl border border-zinc-300 px-4 py-2 focus:ring-indigo-500 focus:border-indigo-500"
-        />
+        <div className="flex gap-2">
+          <input
+            type="email"
+            name="notification_emails"
+            defaultValue={initialSettings?.notification_emails?.[0]}
+            required
+            className="flex-1 rounded-xl border border-zinc-300 px-4 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+          />
+          <button
+            type="button"
+            onClick={handleTestEmail}
+            disabled={testEmailLoading}
+            className="px-4 py-2 bg-zinc-100 text-zinc-700 font-medium rounded-xl hover:bg-zinc-200 transition-colors shadow-sm text-sm disabled:opacity-70 whitespace-nowrap"
+          >
+            {testEmailLoading ? 'Slanje...' : 'Pošalji probni e-mail'}
+          </button>
+        </div>
+        {testEmailError && (
+          <p className="mt-2 text-sm text-red-600">{testEmailError}</p>
+        )}
+        {testEmailSuccess && (
+          <p className="mt-2 text-sm text-emerald-600">{testEmailSuccess}</p>
+        )}
       </div>
 
       <div className="space-y-4">

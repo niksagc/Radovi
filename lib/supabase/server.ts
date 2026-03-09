@@ -19,11 +19,13 @@ export async function createClient() {
         select: () => ({
           eq: () => ({
             single: async () => ({ data: null, error: null }),
+            maybeSingle: async () => ({ data: null, error: null }),
             order: async () => ({ data: [], error: null }),
             limit: async () => ({ data: [], error: null }),
           }),
           order: async () => ({ data: [], error: null }),
           single: async () => ({ data: null, error: null }),
+          maybeSingle: async () => ({ data: null, error: null }),
           limit: async () => ({ data: [], error: null }),
           then: (resolve: any) => resolve({ data: [], error: null }),
         }),
@@ -31,6 +33,7 @@ export async function createClient() {
         update: async () => ({ data: null, error: null }),
         delete: async () => ({ data: null, error: null }),
       }),
+      rpc: async () => ({ data: null, error: null }),
     } as any;
   }
 

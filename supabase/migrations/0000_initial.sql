@@ -216,8 +216,19 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Profiles: Users can read/update their own profile. Admins can do everything.
 CREATE POLICY "Users can view own profile" ON public.profiles FOR SELECT USING (auth.uid() = id OR public.is_admin());
+CREATE POLICY "Public can view profiles for username check" ON public.profiles FOR SELECT USING (true);
 CREATE POLICY "Users can update own profile" ON public.profiles FOR UPDATE USING (auth.uid() = id OR public.is_admin());
-CREATE POLICY "Admins can insert profiles" ON public.profiles FOR INSERT WITH CHECK (public.is_admin());
+
+-- Function to check if username exists (Security Definer to bypass RLS)
+CREATE OR REPLACE FUNCTION public.check_username_exists(u TEXT)
+RETURNS BOOLEAN AS $$
+BEGIN
+  RETURN EXISTS (SELECT 1 FROM public.profiles WHERE username = u);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+GRANT EXECUTE ON FUNCTION public.check_username_exists(TEXT) TO anon, authenticated;
+CREATE POLICY "Users can insert own profile" ON public.profiles FOR INSERT WITH CHECK (auth.uid() = id OR public.is_admin());
 CREATE POLICY "Admins can delete profiles" ON public.profiles FOR DELETE USING (public.is_admin());
 
 -- User Settings
@@ -319,20 +330,20 @@ CREATE TRIGGER set_items_updated_at BEFORE UPDATE ON public.items FOR EACH ROW E
 CREATE TRIGGER set_orders_updated_at BEFORE UPDATE ON public.orders FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
 CREATE TRIGGER set_payments_updated_at BEFORE UPDATE ON public.payments FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
 
--- Trigger to create profile on signup
-CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
+-- All triggers on auth.users are removed to prevent signup blocks.
+-- Profile creation is handled lazily in the application.
+DO $$
+DECLARE
+    r RECORD;
 BEGIN
-  INSERT INTO public.profiles (id, role, username, email)
-  VALUES (NEW.id, 'student', NEW.email, NEW.email);
-  
-  INSERT INTO public.user_settings (user_id)
-  VALUES (NEW.id);
-  
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+    FOR r IN (
+        SELECT tgname, relname 
+        FROM pg_trigger 
+        JOIN pg_class ON pg_trigger.tgrelid = pg_class.oid 
+        JOIN pg_namespace ON pg_class.relnamespace = pg_namespace.oid 
+        WHERE nspname = 'auth' AND relname = 'users'
+    ) LOOP
+        EXECUTE 'DROP TRIGGER IF EXISTS ' || r.tgname || ' ON auth.users';
+    END LOOP;
+END $$;
+DROP FUNCTION IF EXISTS public.handle_new_user();

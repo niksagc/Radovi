@@ -1,287 +1,199 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { Star, Filter, Search, X } from 'lucide-react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
+import { Search, Filter, ShoppingCart, Star } from 'lucide-react';
 
-interface Category {
-  id: string;
-  name: string;
+interface CatalogProps {
+  categories: any[];
+  items: any[];
 }
 
-interface Item {
-  id: string;
-  name: string;
-  description: string;
-  price_cents: number;
-  category_id: string;
-  type: 'base' | 'addon';
-  max_pages: number | null;
-  max_slides: number | null;
-  is_active: boolean;
-}
+export default function Catalog({ categories, items }: CatalogProps) {
+  const [search, setSearch] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [maxPrice, setMaxPrice] = useState<number>(100);
+  const [type, setType] = useState<'all' | 'base' | 'addon'>('all');
+  const [minPages, setMinPages] = useState<number>(0);
+  const [minSlides, setMinSlides] = useState<number>(0);
 
-export default function Catalog({ initialCategories, initialItems }: { initialCategories: Category[], initialItems: Item[] }) {
-  const [items, setItems] = useState<Item[]>(initialItems);
-  const [filteredItems, setFilteredItems] = useState<Item[]>(initialItems);
-  const [categories] = useState<Category[]>(initialCategories);
-  
-  // Filters
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 500]); // Max 500 EUR
-  const [selectedType, setSelectedType] = useState<string>('all');
-  const [maxPages, setMaxPages] = useState<number | ''>('');
-  const [maxSlides, setMaxSlides] = useState<number | ''>('');
-  const [showFilters, setShowFilters] = useState(false);
+  const filteredItems = useMemo(() => {
+    return items.filter(item => {
+      const matchesSearch = item.name.toLowerCase().includes(search.toLowerCase()) || 
+                            item.description?.toLowerCase().includes(search.toLowerCase());
+      const matchesCategory = !selectedCategory || item.category_id === selectedCategory;
+      const matchesPrice = (item.price_cents / 100) <= maxPrice;
+      const matchesType = type === 'all' || item.type === type;
+      const matchesPages = !item.max_pages || item.max_pages >= minPages;
+      const matchesSlides = !item.max_slides || item.max_slides >= minSlides;
 
-  useEffect(() => {
-    let result = items;
-
-    // Search
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter(item => 
-        item.name.toLowerCase().includes(query) || 
-        item.description?.toLowerCase().includes(query)
-      );
-    }
-
-    // Category
-    if (selectedCategory !== 'all') {
-      result = result.filter(item => item.category_id === selectedCategory);
-    }
-
-    // Price Range
-    result = result.filter(item => {
-      const priceEur = item.price_cents / 100;
-      return priceEur >= priceRange[0] && priceEur <= priceRange[1];
+      return matchesSearch && matchesCategory && matchesPrice && matchesType && matchesPages && matchesSlides;
     });
-
-    // Type
-    if (selectedType !== 'all') {
-      result = result.filter(item => item.type === selectedType);
-    }
-
-    // Max Pages
-    if (maxPages !== '') {
-      result = result.filter(item => item.max_pages !== null && item.max_pages <= Number(maxPages));
-    }
-
-    // Max Slides
-    if (maxSlides !== '') {
-      result = result.filter(item => item.max_slides !== null && item.max_slides <= Number(maxSlides));
-    }
-
-    setFilteredItems(result);
-  }, [items, searchQuery, selectedCategory, priceRange, selectedType, maxPages, maxSlides]);
-
-  const clearFilters = () => {
-    setSearchQuery('');
-    setSelectedCategory('all');
-    setPriceRange([0, 500]);
-    setSelectedType('all');
-    setMaxPages('');
-    setMaxSlides('');
-  };
+  }, [items, search, selectedCategory, maxPrice, type, minPages, minSlides]);
 
   return (
-    <div className="flex flex-col lg:flex-row gap-8">
-      {/* Mobile Filter Toggle */}
-      <button 
-        className="lg:hidden flex items-center justify-center gap-2 w-full py-3 bg-white border border-zinc-200 rounded-xl font-medium text-zinc-700"
-        onClick={() => setShowFilters(!showFilters)}
-      >
-        <Filter size={20} />
-        {showFilters ? 'Sakrij filtere' : 'Prikaži filtere'}
-      </button>
-
-      {/* Sidebar Filters */}
-      <aside className={`lg:w-64 flex-shrink-0 ${showFilters ? 'block' : 'hidden lg:block'}`}>
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-zinc-200 sticky top-24 space-y-6">
-          <div className="flex items-center justify-between">
-            <h3 className="font-bold text-zinc-900">Filteri</h3>
-            <button onClick={clearFilters} className="text-xs text-indigo-600 hover:text-indigo-800 font-medium">
-              Očisti sve
-            </button>
+    <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+      {/* Filters Sidebar */}
+      <aside className="lg:col-span-1 space-y-8">
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-zinc-200">
+          <div className="flex items-center gap-2 mb-6">
+            <Filter className="w-5 h-5 text-indigo-600" />
+            <h2 className="font-bold text-zinc-900">Filteri</h2>
           </div>
 
-          {/* Search */}
-          <div>
-            <label className="text-sm font-medium text-zinc-700 mb-2 block">Pretraži</label>
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Naziv usluge..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 border border-zinc-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+          <div className="space-y-6">
+            {/* Search */}
+            <div>
+              <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">Pretraga</label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                <input 
+                  type="text" 
+                  placeholder="Pretraži usluge..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-sm focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+            </div>
+
+            {/* Category */}
+            <div>
+              <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">Kategorija</label>
+              <select 
+                value={selectedCategory || ''} 
+                onChange={(e) => setSelectedCategory(e.target.value || null)}
+                className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500"
+              >
+                <option value="">Sve kategorije</option>
+                {categories.map(cat => (
+                  <option key={cat.id} value={cat.id}>{cat.name}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Price Range */}
+            <div>
+              <div className="flex justify-between items-center mb-2">
+                <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider">Maks. cijena</label>
+                <span className="text-sm font-bold text-indigo-600">{maxPrice} €</span>
+              </div>
+              <input 
+                type="range" 
+                min="0" 
+                max="200" 
+                step="5"
+                value={maxPrice}
+                onChange={(e) => setMaxPrice(parseInt(e.target.value))}
+                className="w-full h-2 bg-zinc-100 rounded-lg appearance-none cursor-pointer accent-indigo-600"
               />
-              <Search className="absolute left-3 top-2.5 text-zinc-400 w-4 h-4" />
             </div>
-          </div>
 
-          {/* Category */}
-          <div>
-            <label className="text-sm font-medium text-zinc-700 mb-2 block">Kategorija</label>
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full p-2 border border-zinc-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-            >
-              <option value="all">Sve kategorije</option>
-              {categories.map(cat => (
-                <option key={cat.id} value={cat.id}>{cat.name}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Price Range */}
-          <div>
-            <label className="text-sm font-medium text-zinc-700 mb-2 block">
-              Cijena: {priceRange[0]}€ - {priceRange[1]}€
-            </label>
-            <input
-              type="range"
-              min="0"
-              max="500"
-              step="10"
-              value={priceRange[1]}
-              onChange={(e) => setPriceRange([priceRange[0], Number(e.target.value)])}
-              className="w-full h-2 bg-zinc-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
-            />
-          </div>
-
-          {/* Type */}
-          <div>
-            <label className="text-sm font-medium text-zinc-700 mb-2 block">Vrsta usluge</label>
-            <div className="space-y-2">
-              <label className="flex items-center space-x-2 text-sm text-zinc-600">
-                <input
-                  type="radio"
-                  name="type"
-                  value="all"
-                  checked={selectedType === 'all'}
-                  onChange={(e) => setSelectedType(e.target.value)}
-                  className="text-indigo-600 focus:ring-indigo-500"
-                />
-                <span>Sve</span>
-              </label>
-              <label className="flex items-center space-x-2 text-sm text-zinc-600">
-                <input
-                  type="radio"
-                  name="type"
-                  value="base"
-                  checked={selectedType === 'base'}
-                  onChange={(e) => setSelectedType(e.target.value)}
-                  className="text-indigo-600 focus:ring-indigo-500"
-                />
-                <span>Osnovne usluge</span>
-              </label>
-              <label className="flex items-center space-x-2 text-sm text-zinc-600">
-                <input
-                  type="radio"
-                  name="type"
-                  value="addon"
-                  checked={selectedType === 'addon'}
-                  onChange={(e) => setSelectedType(e.target.value)}
-                  className="text-indigo-600 focus:ring-indigo-500"
-                />
-                <span>Dodaci</span>
-              </label>
+            {/* Type */}
+            <div>
+              <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">Vrsta usluge</label>
+              <div className="flex flex-col gap-2">
+                {['all', 'base', 'addon'].map((t) => (
+                  <label key={t} className="flex items-center gap-2 cursor-pointer group">
+                    <input 
+                      type="radio" 
+                      name="type" 
+                      checked={type === t}
+                      onChange={() => setType(t as any)}
+                      className="w-4 h-4 text-indigo-600 focus:ring-indigo-500 border-zinc-300"
+                    />
+                    <span className="text-sm text-zinc-600 group-hover:text-zinc-900 capitalize">
+                      {t === 'all' ? 'Sve' : t === 'base' ? 'Osnovna usluga' : 'Dodatak'}
+                    </span>
+                  </label>
+                ))}
+              </div>
             </div>
-          </div>
 
-          {/* Max Pages */}
-          <div>
-            <label className="text-sm font-medium text-zinc-700 mb-2 block">Max stranica</label>
-            <input
-              type="number"
-              min="0"
-              placeholder="Npr. 20"
-              value={maxPages}
-              onChange={(e) => setMaxPages(e.target.value ? Number(e.target.value) : '')}
-              className="w-full p-2 border border-zinc-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-            />
-          </div>
-
-          {/* Max Slides */}
-          <div>
-            <label className="text-sm font-medium text-zinc-700 mb-2 block">Max slajdova</label>
-            <input
-              type="number"
-              min="0"
-              placeholder="Npr. 10"
-              value={maxSlides}
-              onChange={(e) => setMaxSlides(e.target.value ? Number(e.target.value) : '')}
-              className="w-full p-2 border border-zinc-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-            />
+            {/* Pages/Slides */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">Min. str.</label>
+                <input 
+                  type="number" 
+                  min="0"
+                  value={minPages}
+                  onChange={(e) => setMinPages(parseInt(e.target.value) || 0)}
+                  className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">Min. slajd.</label>
+                <input 
+                  type="number" 
+                  min="0"
+                  value={minSlides}
+                  onChange={(e) => setMinSlides(parseInt(e.target.value) || 0)}
+                  className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </aside>
 
-      {/* Results Grid */}
-      <div className="flex-1">
-        <div className="mb-4 text-sm text-zinc-500">
-          Prikazano {filteredItems.length} rezultata
-        </div>
-
+      {/* Items Grid */}
+      <div className="lg:col-span-3">
         {filteredItems.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {filteredItems.map((item) => (
-              <div key={item.id} className="bg-white p-6 rounded-2xl shadow-sm border border-zinc-200 flex flex-col relative hover:shadow-md transition-shadow">
-                {item.type === 'addon' && (
-                  <span className="absolute top-4 right-4 bg-amber-100 text-amber-800 text-xs font-bold px-2 py-1 rounded-lg">
-                    Dodatak
+              <Link 
+                key={item.id} 
+                href={`/usluge/${item.id}`}
+                className="group bg-white p-6 rounded-2xl shadow-sm border border-zinc-200 hover:border-indigo-500 transition-all hover:shadow-md flex flex-col h-full"
+              >
+                <div className="flex justify-between items-start mb-4">
+                  <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-lg uppercase tracking-wider">
+                    {item.categories?.name}
                   </span>
-                )}
-                <div className="mb-4">
-                  <span className="text-xs font-medium text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md mb-2 inline-block">
-                    {categories.find(c => c.id === item.category_id)?.name}
+                  <span className="text-lg font-bold text-zinc-900">
+                    {(item.price_cents / 100).toFixed(2)} €
                   </span>
-                  <h3 className="text-lg font-bold text-zinc-900 pr-16">{item.name}</h3>
                 </div>
                 
-                <p className="text-zinc-500 text-sm mb-4 flex-grow line-clamp-3">{item.description}</p>
+                <h3 className="text-xl font-bold text-zinc-900 mb-2 group-hover:text-indigo-600 transition-colors">
+                  {item.name}
+                </h3>
                 
-                <div className="space-y-2 mb-4 text-xs text-zinc-500">
-                  {item.max_pages && (
-                    <div className="flex items-center gap-1">
-                      <span className="font-medium text-zinc-700">Max str:</span> {item.max_pages}
-                    </div>
-                  )}
-                  {item.max_slides && (
-                    <div className="flex items-center gap-1">
-                      <span className="font-medium text-zinc-700">Max slajdova:</span> {item.max_slides}
-                    </div>
-                  )}
+                <p className="text-zinc-500 text-sm mb-6 line-clamp-2 flex-grow">
+                  {item.description}
+                </p>
+                
+                <div className="flex items-center justify-between pt-4 border-t border-zinc-100 mt-auto">
+                  <div className="flex items-center gap-4 text-xs font-medium text-zinc-400">
+                    {item.max_pages && <span>{item.max_pages} str.</span>}
+                    {item.max_slides && <span>{item.max_slides} slajd.</span>}
+                    <span>{item.delivery_days} dana</span>
+                  </div>
+                  <div className="w-8 h-8 bg-zinc-900 text-white rounded-full flex items-center justify-center group-hover:bg-indigo-600 transition-colors">
+                    <ShoppingCart size={14} />
+                  </div>
                 </div>
-
-                <div className="flex items-center justify-between mt-auto pt-4 border-t border-zinc-100">
-                  <span className="text-xl font-bold text-zinc-900">{(item.price_cents / 100).toFixed(2)} €</span>
-                  <Link 
-                    href={`/usluge/${item.id}`} 
-                    className="bg-indigo-600 text-white hover:bg-indigo-700 px-4 py-2 rounded-xl text-sm font-medium transition-colors"
-                  >
-                    Detalji
-                  </Link>
-                </div>
-              </div>
+              </Link>
             ))}
           </div>
         ) : (
-          <div className="text-center py-12 bg-white rounded-2xl shadow-sm border border-zinc-200">
-            <div className="w-16 h-16 bg-zinc-100 rounded-full flex items-center justify-center mx-auto mb-4 text-zinc-400">
-              <Search size={32} />
-            </div>
-            <h3 className="text-lg font-medium text-zinc-900 mb-1">Nema rezultata</h3>
-            <p className="text-zinc-500">Pokušajte promijeniti filtere ili pretragu.</p>
+          <div className="bg-white p-12 rounded-2xl border border-zinc-200 text-center">
+            <Search className="w-12 h-12 text-zinc-200 mx-auto mb-4" />
+            <h3 className="text-lg font-bold text-zinc-900 mb-2">Nema rezultata</h3>
+            <p className="text-zinc-500">Pokušajte promijeniti filtere ili pojam za pretragu.</p>
             <button 
-              onClick={clearFilters}
-              className="mt-4 text-indigo-600 hover:text-indigo-800 font-medium text-sm"
+              onClick={() => {
+                setSearch('');
+                setSelectedCategory(null);
+                setMaxPrice(100);
+                setType('all');
+                setMinPages(0);
+                setMinSlides(0);
+              }}
+              className="mt-6 text-indigo-600 font-bold hover:text-indigo-500"
             >
-              Očisti sve filtere
+              Poništi sve filtere
             </button>
           </div>
         )}

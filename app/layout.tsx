@@ -1,6 +1,7 @@
 import type {Metadata} from 'next';
 import './globals.css'; // Global styles
 import AIAssistant from '@/components/AIAssistant';
+import ProfileSync from '@/components/ProfileSync';
 
 export const metadata: Metadata = {
   title: 'StudyWorks',
@@ -12,6 +13,7 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
     <html lang="hr">
       <body suppressHydrationWarning>
         {children}
+        <ProfileSync />
         <AIAssistant />
       </body>
     </html>

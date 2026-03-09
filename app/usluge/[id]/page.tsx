@@ -31,8 +31,8 @@ export default async function ServiceDetailsPage({ params }: { params: Promise<{
     .order('created_at', { ascending: false });
 
   const averageRating = reviews && reviews.length > 0
-  ? reviews.reduce((acc: number, review: any) => acc + review.rating, 0) / reviews.length
-  : 0;
+    ? reviews.reduce((acc: number, review: any) => acc + review.rating, 0) / reviews.length
+    : 0;
 
   return (
     <div className="min-h-screen bg-zinc-50 flex flex-col">
@@ -178,3 +178,4 @@ export default async function ServiceDetailsPage({ params }: { params: Promise<{
     </div>
   );
 }
+

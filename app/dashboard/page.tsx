@@ -2,11 +2,30 @@ import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import UnreadBadge from '@/components/UnreadBadge';
 import DeleteOrderButton from '@/components/DeleteOrderButton';
+import OnboardingModal from '@/components/OnboardingModal';
 
 export default async function DashboardPage() {
   const supabase = await createClient();
   
   const { data: { user } } = await supabase.auth.getUser();
+
+  // Ensure profile exists
+  if (user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', user.id)
+      .single();
+    
+    if (!profile) {
+      await supabase.from('profiles').insert({
+        id: user.id,
+        email: user.email,
+        username: user.email?.split('@')[0] || `user_${user.id.substring(0, 8)}`,
+        role: 'student'
+      });
+    }
+  }
   
   const { data: orders } = await supabase
     .from('orders')
@@ -17,6 +36,7 @@ export default async function DashboardPage() {
 
   return (
     <div>
+      <OnboardingModal />
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold text-zinc-900">Moje narudžbe</h1>
         <Link href="/kategorije" className="bg-indigo-600 text-white px-4 py-2 rounded-xl hover:bg-indigo-700 transition-colors text-sm font-medium">

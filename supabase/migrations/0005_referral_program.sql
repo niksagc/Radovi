@@ -20,7 +20,12 @@ DECLARE
   exists_count INT;
 BEGIN
   -- Base code: first 4 chars of email (or less) + random 4 digits
-  base_code := lower(regexp_replace(split_part(email, '@', 1), '[^a-zA-Z0-9]', '', 'g'));
+  IF email IS NULL OR email = '' THEN
+    base_code := 'user';
+  ELSE
+    base_code := lower(regexp_replace(split_part(email, '@', 1), '[^a-zA-Z0-9]', '', 'g'));
+  END IF;
+  
   IF length(base_code) > 4 THEN
     base_code := substring(base_code from 1 for 4);
   END IF;
@@ -35,31 +40,16 @@ BEGIN
       RETURN new_code;
     END IF;
     counter := counter + 1;
-    IF counter > 100 THEN
+    IF counter > 50 THEN
        -- Fallback if too many collisions
-       RETURN 'user' || floor(random() * 900000 + 100000)::text;
+       RETURN base_code || substring(replace(gen_random_uuid()::text, '-', ''), 1, 6);
     END IF;
   END LOOP;
 END;
 $$ LANGUAGE plpgsql;
 
--- Trigger function to assign referral code on insert
-CREATE OR REPLACE FUNCTION set_referral_code() 
-RETURNS TRIGGER AS $$
-BEGIN
-  IF NEW.referral_code IS NULL THEN
-    NEW.referral_code := generate_unique_referral_code(NEW.email);
-  END IF;
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
--- Trigger
-DROP TRIGGER IF EXISTS ensure_referral_code ON public.profiles;
-CREATE TRIGGER ensure_referral_code
-BEFORE INSERT ON public.profiles
-FOR EACH ROW
-EXECUTE FUNCTION set_referral_code();
+-- Referral code generation is now handled lazily in the application code.
+-- The set_referral_code function and trigger are removed.
 
 -- Backfill existing profiles
 DO $$
