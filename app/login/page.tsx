@@ -142,9 +142,14 @@ export default function LoginPage() {
                 />
               </div>
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-zinc-700">
-                  Lozinka
-                </label>
+                <div className="flex justify-between items-center">
+                  <label htmlFor="password" className="block text-sm font-medium text-zinc-700">
+                    Lozinka
+                  </label>
+                  <Link href="/zaboravljena-lozinka" className="text-xs font-medium text-indigo-600 hover:text-indigo-500">
+                    Zaboravili ste lozinku?
+                  </Link>
+                </div>
                 <input
                   id="password"
                   name="password"
@@ -176,19 +181,6 @@ export default function LoginPage() {
             </div>
           </form>
         )}
-
-        <div className="mt-6 border-t border-zinc-200 pt-6">
-          <p className="text-sm text-zinc-500 text-center mb-4">
-            Za testiranje sustava, prvo inicijalizirajte bazu podataka:
-          </p>
-          <button
-            onClick={handleSeed}
-            disabled={seeding || isLoginPending || isMagicLinkPending}
-            className="w-full flex justify-center py-2 px-4 border border-zinc-300 rounded-xl shadow-sm text-sm font-medium text-zinc-700 bg-white hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
-          >
-            {seeding ? 'Inicijalizacija...' : 'Inicijaliziraj testne podatke'}
-          </button>
-        </div>
       </motion.div>
     </div>
   );

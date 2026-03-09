@@ -85,7 +85,7 @@ export async function login(formData: FormData) {
     console.error('Login profile fetch error:', JSON.stringify(profileError));
     
     if (profileError.code === 'PGRST205') {
-      return { error: 'Baza podataka nije ispravno konfigurirana (tablice nedostaju). Molimo pokrenite inicijalizaciju testnih podataka na dnu stranice.' };
+      return { error: 'Baza podataka nije ispravno konfigurirana (tablice nedostaju).' };
     }
 
     if (profileError.code === 'PGRST116') {

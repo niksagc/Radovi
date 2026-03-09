@@ -57,7 +57,7 @@ const steps = [
           </ul>
         </div>
         <p className="text-sm">
-          Plaćanje se vrši direktno na IBAN račun.
+          Plaćanje se vrši direktno na IBAN račun ili karticama (Stripe).
         </p>
       </div>
     ),
