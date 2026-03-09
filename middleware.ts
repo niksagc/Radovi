@@ -26,7 +26,6 @@ export async function middleware(request: NextRequest) {
             request.cookies.set(name, value);
           });
           
-          // Create the response with the updated request cookies
           supabaseResponse = NextResponse.next({
             request,
           });
@@ -34,7 +33,6 @@ export async function middleware(request: NextRequest) {
           cookiesToSet.forEach(({ name, value, options }) => {
             supabaseResponse.cookies.set(name, value, {
               ...options,
-              // Ensure cross-origin iframe support
               sameSite: 'none',
               secure: true,
             });
@@ -44,23 +42,7 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  let user = null;
-  try {
-    const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
-    
-    if (authError) {
-      // If there's an auth error (like invalid refresh token), we should treat the user as logged out
-      if (authError.message !== 'Auth session missing!') {
-        console.warn('Middleware auth error (handled):', authError.message);
-      }
-      user = null;
-    } else {
-      user = authUser;
-    }
-  } catch (error) {
-    console.error('Middleware auth exception:', error);
-    user = null;
-  }
+  const { data: { user } } = await supabase.auth.getUser();
 
   const isAuthRoute = request.nextUrl.pathname.startsWith('/login') || request.nextUrl.pathname.startsWith('/register');
   const isDashboardRoute = request.nextUrl.pathname.startsWith('/dashboard');
@@ -68,14 +50,12 @@ export async function middleware(request: NextRequest) {
   const isRootRoute = request.nextUrl.pathname === '/';
 
   if (user) {
-    // Get user role for intelligent redirection
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', user.id)
       .single();
 
-    // If table doesn't exist yet, don't crash middleware
     if (profileError && profileError.code === 'PGRST205') {
       return supabaseResponse;
     }
@@ -83,19 +63,54 @@ export async function middleware(request: NextRequest) {
     const role = profile?.role || 'student';
 
     if (isAuthRoute || isRootRoute) {
-      return NextResponse.redirect(new URL(role === 'admin' ? '/admin' : '/dashboard', request.url));
+      const redirectUrl = new URL(role === 'admin' ? '/admin' : '/dashboard', request.url);
+      const redirectResponse = NextResponse.redirect(redirectUrl);
+      
+      supabaseResponse.cookies.getAll().forEach((cookie) => {
+        redirectResponse.cookies.set(cookie.name, cookie.value, {
+          ...cookie,
+          sameSite: 'none',
+          secure: true,
+        });
+      });
+      
+      return redirectResponse;
     }
 
     if (isAdminRoute && role !== 'admin') {
-      return NextResponse.redirect(new URL('/dashboard', request.url));
+      const redirectResponse = NextResponse.redirect(new URL('/dashboard', request.url));
+      supabaseResponse.cookies.getAll().forEach((cookie) => {
+        redirectResponse.cookies.set(cookie.name, cookie.value, {
+          ...cookie,
+          sameSite: 'none',
+          secure: true,
+        });
+      });
+      return redirectResponse;
     }
 
     if (isDashboardRoute && role === 'admin') {
-      return NextResponse.redirect(new URL('/admin', request.url));
+      const redirectResponse = NextResponse.redirect(new URL('/admin', request.url));
+      supabaseResponse.cookies.getAll().forEach((cookie) => {
+        redirectResponse.cookies.set(cookie.name, cookie.value, {
+          ...cookie,
+          sameSite: 'none',
+          secure: true,
+        });
+      });
+      return redirectResponse;
     }
   } else {
     if (isDashboardRoute || isAdminRoute) {
-      return NextResponse.redirect(new URL('/login', request.url));
+      const redirectResponse = NextResponse.redirect(new URL('/login', request.url));
+      supabaseResponse.cookies.getAll().forEach((cookie) => {
+        redirectResponse.cookies.set(cookie.name, cookie.value, {
+          ...cookie,
+          sameSite: 'none',
+          secure: true,
+        });
+      });
+      return redirectResponse;
     }
   }
 
