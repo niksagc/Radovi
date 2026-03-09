@@ -47,9 +47,11 @@ export async function POST(request: Request) {
       if (order) {
         let newStatus = order.status;
         if (payment.stage === 'deposit') {
-          newStatus = 'Depozit plaćen';
-        } else if (payment.stage === 'full' || payment.stage === 'final') {
-          newStatus = 'Plaćeno'; // Or 'Završeno' depending on logic
+          newStatus = 'Uplaćen depozit - U izradi';
+        } else if (payment.stage === 'full') {
+          newStatus = 'U izradi';
+        } else if (payment.stage === 'final') {
+          newStatus = 'Završeno';
           // Unlock files
           await supabase.from('files').update({ is_locked: false }).eq('order_id', order.id);
         }

@@ -65,8 +65,9 @@ export default function OrderActions({ order }: { order: any }) {
 
       if (dbError) throw dbError;
 
-      // Update order status to Isporučeno
-      await handleStatusChange('Isporučeno');
+      // Update order status based on payment model
+      const nextStatus = order.payment_model === '50-50' ? 'Čeka uplatu 2.dijela' : 'Isporučeno';
+      await handleStatusChange(nextStatus);
       
       setFile(null);
       router.refresh();
@@ -92,8 +93,10 @@ export default function OrderActions({ order }: { order: any }) {
       if (payment) {
         let newStatus = order.status;
         if (payment.stage === 'deposit') {
-          newStatus = 'Depozit plaćen';
-        } else if (payment.stage === 'full' || payment.stage === 'final') {
+          newStatus = 'Uplaćen depozit - U izradi';
+        } else if (payment.stage === 'full') {
+          newStatus = 'U izradi';
+        } else if (payment.stage === 'final') {
           newStatus = 'Završeno';
           // Unlock files
           await supabase.from('files').update({ is_locked: false }).eq('order_id', order.id);
@@ -127,10 +130,10 @@ export default function OrderActions({ order }: { order: any }) {
             >
               <option value="Nacrt">Nacrt</option>
               <option value="Čeka uplatu">Čeka uplatu</option>
-              <option value="Depozit plaćen">Depozit plaćen</option>
+              <option value="Uplaćen depozit - U izradi">Uplaćen depozit - U izradi</option>
               <option value="U izradi">U izradi</option>
               <option value="Isporučeno">Isporučeno</option>
-              <option value="Čeka potvrdu naplate (2. dio)">Čeka potvrdu naplate (2. dio)</option>
+              <option value="Čeka uplatu 2.dijela">Čeka uplatu 2.dijela</option>
               <option value="Završeno">Završeno</option>
               <option value="Otkazano zbog neplaćanja (2. dio)">Otkazano zbog neplaćanja (2. dio)</option>
               <option value="Otkazano">Otkazano</option>

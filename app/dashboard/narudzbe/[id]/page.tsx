@@ -183,7 +183,7 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
               <Link href={`/placanje/${order.id}`} className="block w-full text-center py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-colors">
                 Plati sada
               </Link>
-            ) : order.status === 'Čeka potvrdu naplate (2. dio)' ? (
+            ) : order.status === 'Čeka uplatu 2.dijela' ? (
               <Link href={`/placanje/${order.id}`} className="block w-full text-center py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-colors">
                 Plati 2. dio
               </Link>

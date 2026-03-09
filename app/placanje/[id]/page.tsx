@@ -31,7 +31,7 @@ export default async function PaymentPage({ params }: { params: Promise<{ id: st
   }
 
   // If already paid deposit or full, redirect to order details
-  if (['Depozit plaćen', 'U izradi', 'Isporučeno', 'Završeno'].includes(order.status)) {
+  if (['Depozit plaćen', 'Uplaćen depozit - U izradi', 'U izradi', 'Isporučeno', 'Završeno'].includes(order.status)) {
     redirect(`/dashboard/narudzbe/${order.id}`);
   }
 
