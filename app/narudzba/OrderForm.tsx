@@ -10,6 +10,7 @@ import { validateReferralCode } from '@/lib/actions/referrals';
 export default function OrderForm({ profile }: { profile: any }) {
   const { items, subtotalCents, addonsTotalCents, totalCents, clearCart } = useCartStore();
   const [loading, setLoading] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const supabase = createClient();
@@ -39,10 +40,10 @@ export default function OrderForm({ profile }: { profile: any }) {
   const [schoolInstructions, setSchoolInstructions] = useState<File | null>(null);
 
   useEffect(() => {
-    if (items.length === 0) {
+    if (items.length === 0 && !isRedirecting) {
       router.push('/kosarica');
     }
-  }, [items, router]);
+  }, [items, router, isRedirecting]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -168,6 +169,7 @@ export default function OrderForm({ profile }: { profile: any }) {
       if (clientUpload) await uploadFile(clientUpload, 'client_upload');
       if (schoolInstructions) await uploadFile(schoolInstructions, 'school_instructions');
 
+      setIsRedirecting(true);
       // 6. Clear cart and redirect to order details
       clearCart();
       router.push(`/dashboard/narudzbe/${order.id}`);
