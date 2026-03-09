@@ -1,15 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
+import { submitContactForm } from './actions';
 
 export default function ContactPage() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
-  const supabase = createClient();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -17,63 +16,20 @@ export default function ContactPage() {
     setError(null);
 
     const formData = new FormData(e.currentTarget);
-    const name = formData.get('name') as string;
-    const email = formData.get('email') as string;
-    const subject = formData.get('subject') as string;
-    const deadline = formData.get('deadline') as string;
-    const message = formData.get('message') as string;
+    if (file) {
+      formData.append('file', file);
+    }
 
     try {
-      // 1. Insert contact
-      const { data: contact, error: contactError } = await supabase
-        .from('preorder_contacts')
-        .insert({
-          name,
-          email,
-          subject,
-          deadline: deadline ? new Date(deadline).toISOString() : null,
-          message,
-        })
-        .select()
-        .single();
-
-      if (contactError) throw contactError;
-
-      // 2. Upload file if exists
-      if (file && contact) {
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
-        const filePath = `${contact.id}/${fileName}`;
-
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('filePath', filePath);
-        formData.append('bucket', 'preorders');
-
-        const res = await fetch('/api/upload', {
-          method: 'POST',
-          body: formData,
-        });
-
-        if (!res.ok) {
-          const errorData = await res.json();
-          throw new Error(errorData.error || 'Greška pri prijenosu datoteke');
-        }
-
-        const { error: dbError } = await supabase.from('files').insert({
-          preorder_contact_id: contact.id,
-          kind: 'preorder',
-          path: filePath,
-          filename: file.name,
-          size_bytes: file.size,
-        });
-
-        if (dbError) throw dbError;
+      const result = await submitContactForm(formData);
+      
+      if (result.error) {
+        setError(result.error);
+      } else if (result.success) {
+        setSuccess(true);
+        (e.target as HTMLFormElement).reset();
+        setFile(null);
       }
-
-      setSuccess(true);
-      (e.target as HTMLFormElement).reset();
-      setFile(null);
     } catch (err: any) {
       console.error('Contact error:', err);
       setError(err.message || 'Došlo je do pogreške prilikom slanja upita.');
