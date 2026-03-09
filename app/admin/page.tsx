@@ -11,7 +11,6 @@ export default async function AdminDashboardPage() {
   const { data: orders } = await supabase
     .from('orders')
     .select('*, profiles(first_name, last_name, email), order_messages(created_at, sender_id)')
-    .eq('deleted_by_admin', false)
     .order('created_at', { ascending: false })
     .limit(10);
 

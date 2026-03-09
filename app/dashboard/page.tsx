@@ -31,7 +31,6 @@ export default async function DashboardPage() {
     .from('orders')
     .select('*, order_messages(created_at, sender_id)')
     .eq('student_id', user?.id)
-    .eq('deleted_by_student', false)
     .order('created_at', { ascending: false });
 
   return (
