@@ -89,7 +89,24 @@ export async function login(formData: FormData) {
     }
 
     if (profileError.code === 'PGRST116') {
-      return { error: 'Vaš profil nije pronađen u bazi podataka. Molimo kliknite na "Inicijaliziraj testne podatke" na dnu stranice kako biste kreirali potrebne profile.' };
+      console.log('Profile missing on login, creating lazily...');
+      const user = authData.user;
+      const emailPrefix = user.email?.split('@')[0] || 'user';
+      const fallbackUsername = `${emailPrefix}_${user.id.substring(0, 4)}`;
+
+      await supabase.from('profiles').insert({
+        id: user.id,
+        email: user.email!,
+        username: user.user_metadata?.username || fallbackUsername,
+        first_name: user.user_metadata?.first_name || '',
+        last_name: user.user_metadata?.last_name || '',
+        role: 'student',
+        referral_code: `ref_${Math.random().toString(36).substring(2, 10)}`
+      });
+      
+      await supabase.from('user_settings').insert({ user_id: user.id });
+      
+      redirect('/dashboard');
     }
     
     // If profile is missing, it might be a new user from trigger or seed issue
