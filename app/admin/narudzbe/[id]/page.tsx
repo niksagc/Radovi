@@ -24,6 +24,10 @@ export default async function AdminOrderDetailsPage({ params }: { params: Promis
     notFound();
   }
 
+  if (order.deleted_by_admin) {
+    redirect('/admin/narudzbe');
+  }
+
   return (
     <div>
       <div className="mb-6">

@@ -20,7 +20,7 @@ export async function deleteOrder(orderId: string, userRole: 'student' | 'admin'
 
   if (!order) throw new Error('Order not found');
 
-  const canDelete = ['Završeno', 'Otkazano', 'Otkazano zbog neplaćanja (2. dio)', 'Isteklo'].includes(order.status);
+  const canDelete = ['Nacrt', 'Završeno', 'Otkazano', 'Otkazano zbog neplaćanja (2. dio)', 'Isteklo'].includes(order.status);
   if (!canDelete) throw new Error('Cannot delete active order');
 
   const updateData = userRole === 'student' 

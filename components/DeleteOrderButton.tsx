@@ -16,7 +16,7 @@ export default function DeleteOrderButton({ orderId, userRole, status }: DeleteO
   const router = useRouter();
 
   // Check if order can be deleted
-  const canDelete = ['Završeno', 'Otkazano', 'Otkazano zbog neplaćanja (2. dio)', 'Isteklo'].includes(status);
+  const canDelete = ['Nacrt', 'Završeno', 'Otkazano', 'Otkazano zbog neplaćanja (2. dio)', 'Isteklo'].includes(status);
 
   if (!canDelete) return null;
 

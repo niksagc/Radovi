@@ -24,7 +24,7 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
     notFound();
   }
 
-  if (order.student_id !== user.id) {
+  if (order.student_id !== user.id || order.deleted_by_student) {
     redirect('/dashboard');
   }
 
