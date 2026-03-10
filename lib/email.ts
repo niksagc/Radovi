@@ -1,7 +1,7 @@
 import nodemailer from 'nodemailer';
 
 // Configuration from environment variables
-const SMTP_HOST = process.env.SMTP_HOST || 'smtp.zoho.eu';
+const SMTP_HOST = process.env.SMTP_HOST || 'smtp.zoho.com';
 const SMTP_PORT = parseInt(process.env.SMTP_PORT || '465', 10);
 const SMTP_USER = process.env.SMTP_USER;
 const SMTP_PASS = process.env.SMTP_PASS;
@@ -12,11 +12,15 @@ const FROM_NAME = process.env.FROM_NAME || 'StudyWorks';
 const transporter = SMTP_USER && SMTP_PASS ? nodemailer.createTransport({
   host: SMTP_HOST,
   port: SMTP_PORT,
-  secure: SMTP_PORT === 465, // true for 465, false for other ports
+  secure: SMTP_PORT === 465, // true for 465, false for 587
   auth: {
     user: SMTP_USER,
     pass: SMTP_PASS,
   },
+  // Zoho requires this for some environments if using port 587
+  tls: {
+    rejectUnauthorized: false
+  }
 }) : null;
 
 export async function sendEmail({
@@ -48,12 +52,13 @@ export async function sendEmail({
   } catch (error: any) {
     console.error('SMTP error:', error);
     
-    // Provide a more descriptive error for common Zoho issues
     let errorMessage = error.message;
-    if (errorMessage.includes('Invalid login')) {
-      errorMessage = 'Pogrešna prijava: Provjerite SMTP_USER i SMTP_PASS (koristite App Password).';
+    if (errorMessage.includes('535') || errorMessage.includes('Authentication Failed')) {
+      errorMessage = 'Greška 535: Prijava nije uspjela. Provjerite SMTP_USER i SMTP_PASS. VAŽNO: Ako imate 2FA, MORATE koristiti "App Password", a ne običnu lozinku. Također provjerite je li SMTP omogućen u Zoho postavkama.';
     } else if (errorMessage.includes('Relay Access Denied')) {
       errorMessage = 'Pristup odbijen: Provjerite je li FROM_EMAIL ispravno postavljen na vašu Zoho adresu.';
+    } else if (errorMessage.includes('ETIMEDOUT')) {
+      errorMessage = 'Veza je istekla: Provjerite SMTP_HOST i SMTP_PORT (Zoho obično koristi 465).';
     }
 
     return { success: false, error: errorMessage };
