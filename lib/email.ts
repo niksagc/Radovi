@@ -1,9 +1,23 @@
-import { Resend } from 'resend';
+import nodemailer from 'nodemailer';
 
-// Only initialize if the key is present
-const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
-const FROM_EMAIL = process.env.FROM_EMAIL || 'onboarding@resend.dev';
+// Configuration from environment variables
+const SMTP_HOST = process.env.SMTP_HOST || 'smtp.zoho.eu';
+const SMTP_PORT = parseInt(process.env.SMTP_PORT || '465', 10);
+const SMTP_USER = process.env.SMTP_USER;
+const SMTP_PASS = process.env.SMTP_PASS;
+const FROM_EMAIL = process.env.FROM_EMAIL || SMTP_USER || 'info@studyworks.work.gd';
 const FROM_NAME = process.env.FROM_NAME || 'StudyWorks';
+
+// Create a transporter object using the default SMTP transport
+const transporter = SMTP_USER && SMTP_PASS ? nodemailer.createTransport({
+  host: SMTP_HOST,
+  port: SMTP_PORT,
+  secure: SMTP_PORT === 465, // true for 465, false for other ports
+  auth: {
+    user: SMTP_USER,
+    pass: SMTP_PASS,
+  },
+}) : null;
 
 export async function sendEmail({
   to,
@@ -14,23 +28,35 @@ export async function sendEmail({
   subject: string;
   html: string;
 }) {
-  if (!resend) {
-    console.warn('RESEND_API_KEY is not set. Email not sent:', subject);
-    return { success: false, error: 'RESEND_API_KEY is missing in environment variables.' };
+  if (!transporter) {
+    console.warn('SMTP configuration is missing. Email not sent:', subject);
+    return { success: false, error: 'SMTP configuration (SMTP_USER/SMTP_PASS) is missing.' };
   }
 
+  console.log(`Sending email to: ${to}, subject: ${subject}, from: ${FROM_NAME} <${FROM_EMAIL}> via Zoho SMTP`);
+
   try {
-    const data = await resend.emails.send({
-      from: `${FROM_NAME} <${FROM_EMAIL}>`,
+    const info = await transporter.sendMail({
+      from: `"${FROM_NAME}" <${FROM_EMAIL}>`,
       to,
       subject,
       html,
     });
 
-    return { success: true, data };
+    console.log('Email sent successfully:', info.messageId);
+    return { success: true, data: info };
   } catch (error: any) {
-    console.error('Error sending email:', error);
-    return { success: false, error: error.message };
+    console.error('SMTP error:', error);
+    
+    // Provide a more descriptive error for common Zoho issues
+    let errorMessage = error.message;
+    if (errorMessage.includes('Invalid login')) {
+      errorMessage = 'Pogrešna prijava: Provjerite SMTP_USER i SMTP_PASS (koristite App Password).';
+    } else if (errorMessage.includes('Relay Access Denied')) {
+      errorMessage = 'Pristup odbijen: Provjerite je li FROM_EMAIL ispravno postavljen na vašu Zoho adresu.';
+    }
+
+    return { success: false, error: errorMessage };
   }
 }
 
