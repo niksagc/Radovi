@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Menu, X, LogOut } from 'lucide-react';
+import Logo from '@/components/Logo';
 
 export default function AdminHeader({ logoutAction }: { logoutAction: () => Promise<void> }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -24,8 +25,11 @@ export default function AdminHeader({ logoutAction }: { logoutAction: () => Prom
     <header className="bg-zinc-900 border-b border-zinc-800 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         <div className="flex items-center">
-          <Link href="/admin" className="text-2xl font-bold text-white tracking-tight">
-            StudyWorks <span className="text-indigo-400 text-sm align-top ml-1">Admin</span>
+          <Link href="/admin" className="flex items-center">
+            <Logo color="white" />
+            <span className="text-indigo-400 text-xs font-bold uppercase tracking-widest ml-2 mt-1 px-1.5 py-0.5 bg-indigo-400/10 rounded border border-indigo-400/20">
+              Admin
+            </span>
           </Link>
           
           {/* Desktop Navigation */}

@@ -4,6 +4,7 @@ import { useState, useActionState } from 'react';
 import { login, sendMagicLink } from './actions';
 import Link from 'next/link';
 import { motion } from 'motion/react';
+import Logo from '@/components/Logo';
 
 export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
@@ -60,8 +61,11 @@ export default function LoginPage() {
         animate={{ opacity: 1, y: 0 }}
         className="max-w-md w-full space-y-8 bg-white p-8 rounded-2xl shadow-sm border border-zinc-100"
       >
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-zinc-900">
+        <div className="flex flex-col items-center">
+          <Link href="/">
+            <Logo className="mb-4" />
+          </Link>
+          <h2 className="mt-2 text-center text-3xl font-bold tracking-tight text-zinc-900">
             Prijava / Registracija
           </h2>
           <p className="mt-2 text-center text-sm text-zinc-600">

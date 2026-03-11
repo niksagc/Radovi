@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import Footer from '@/components/Footer';
+import Logo from '@/components/Logo';
 
 export default function HomePage() {
   return (
@@ -8,8 +9,8 @@ export default function HomePage() {
       <header className="bg-white border-b border-zinc-200 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center">
-            <Link href="/" className="text-2xl font-bold text-indigo-600 tracking-tight">
-              StudyWorks
+            <Link href="/" className="flex items-center">
+              <Logo />
             </Link>
           </div>
           <div className="flex items-center space-x-4">

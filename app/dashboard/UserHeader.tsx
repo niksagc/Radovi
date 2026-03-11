@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Menu, X, LogOut, ShoppingCart } from 'lucide-react';
+import Logo from '@/components/Logo';
 
 export default function UserHeader({ logoutAction, role }: { logoutAction: () => Promise<void>, role?: string }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -25,8 +26,8 @@ export default function UserHeader({ logoutAction, role }: { logoutAction: () =>
     <header className="bg-white border-b border-zinc-200 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         <div className="flex items-center">
-          <Link href="/dashboard" className="text-2xl font-bold text-indigo-600 tracking-tight">
-            StudyWorks
+          <Link href="/dashboard" className="flex items-center">
+            <Logo />
           </Link>
           
           {/* Desktop Navigation */}
