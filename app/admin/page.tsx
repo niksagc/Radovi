@@ -68,7 +68,7 @@ export default async function AdminDashboardPage() {
       .gte('created_at', start.toISOString())
       .lte('created_at', end.toISOString());
 
-    const revenue = (monthPayments?.reduce((sum, p) => sum + p.amount_cents, 0) || 0) / 100;
+    const revenue = (monthPayments?.reduce((sum: number, p: any) => sum + p.amount_cents, 0) || 0) / 100;
     
     chartData.push({
       name: format(monthDate, 'MMM', { locale: hr }),

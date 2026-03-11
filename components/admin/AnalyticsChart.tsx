@@ -1,6 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
 interface AnalyticsChartProps {
@@ -12,11 +11,7 @@ interface AnalyticsChartProps {
 }
 
 export default function AnalyticsChart({ data }: AnalyticsChartProps) {
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
+  const isMounted = typeof window !== 'undefined';
 
   if (!isMounted) {
     return <div className="h-[300px] w-full bg-zinc-50 animate-pulse rounded-xl" />;
