@@ -63,7 +63,10 @@ export async function middleware(request: NextRequest) {
     const role = profile?.role || 'student';
 
     if (isAuthRoute || isRootRoute) {
-      const redirectUrl = new URL(role === 'admin' ? '/admin' : '/dashboard', request.url);
+      if (role === 'admin') {
+        return supabaseResponse;
+      }
+      const redirectUrl = new URL('/dashboard', request.url);
       const redirectResponse = NextResponse.redirect(redirectUrl);
       
       supabaseResponse.cookies.getAll().forEach((cookie) => {
@@ -90,15 +93,7 @@ export async function middleware(request: NextRequest) {
     }
 
     if (isDashboardRoute && role === 'admin') {
-      const redirectResponse = NextResponse.redirect(new URL('/admin', request.url));
-      supabaseResponse.cookies.getAll().forEach((cookie) => {
-        redirectResponse.cookies.set(cookie.name, cookie.value, {
-          ...cookie,
-          sameSite: 'none',
-          secure: true,
-        });
-      });
-      return redirectResponse;
+      return supabaseResponse;
     }
   } else {
     if (isDashboardRoute || isAdminRoute) {

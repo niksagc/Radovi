@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Menu, X, LogOut, ShoppingCart } from 'lucide-react';
 
-export default function UserHeader({ logoutAction }: { logoutAction: () => Promise<void> }) {
+export default function UserHeader({ logoutAction, role }: { logoutAction: () => Promise<void>, role?: string }) {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
 
@@ -16,6 +16,10 @@ export default function UserHeader({ logoutAction }: { logoutAction: () => Promi
     { name: 'Preporuči i zaradi', href: '/dashboard/preporuke' },
     { name: 'Postavke profila', href: '/dashboard/postavke' },
   ];
+
+  if (role === 'admin') {
+    navigation.unshift({ name: 'Admin Panel', href: '/admin' });
+  }
 
   return (
     <header className="bg-white border-b border-zinc-200 sticky top-0 z-50">

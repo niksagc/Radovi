@@ -145,23 +145,26 @@ export async function GET(request: Request) {
 
     // 5. Create Categories
     const categories = [
-      { name: 'Lektura', description: 'Jezična i stilska obrada teksta', sort_order: 1 },
-      { name: 'Formatiranje', description: 'Tehničko uređenje rada', sort_order: 2 },
-      { name: 'Prezentacije', description: 'Izrada i dorada PPT', sort_order: 3 }
+      { name: 'Učenički radovi', description: 'Pomoć pri izradi učeničkih radova i eseja', sort_order: 1 },
+      { name: 'Završni radovi', description: 'Pomoć pri izradi završnih i diplomskih radova', sort_order: 2 },
+      { name: 'Prezentacije', description: 'Izrada i dorada PowerPoint prezentacija', sort_order: 3 },
+      { name: 'Ostalo', description: 'Ostale usluge uređivanja i formatiranja', sort_order: 4 }
     ];
 
     const { data: cats } = await supabase.from('categories').upsert(categories, { onConflict: 'name' }).select();
 
     // 6. Create Items
     if (cats && cats.length > 0) {
-      const lekturaId = cats.find((c: any) => c.name === 'Lektura')?.id;
-      const formId = cats.find((c: any) => c.name === 'Formatiranje')?.id;
+      const ucenickiId = cats.find((c: any) => c.name === 'Učenički radovi')?.id;
+      const zavrsniId = cats.find((c: any) => c.name === 'Završni radovi')?.id;
+      const prezentacijeId = cats.find((c: any) => c.name === 'Prezentacije')?.id;
+      const ostaloId = cats.find((c: any) => c.name === 'Ostalo')?.id;
 
       const items = [
         {
-          category_id: lekturaId,
-          name: 'Lektura – do 5 stranica',
-          description: 'Provjera i ispravak gramatičkih pogrešaka do 5 stranica',
+          category_id: ucenickiId,
+          name: 'Esej – do 5 stranica',
+          description: 'Pisanje i uređivanje školskog eseja',
           price_cents: 7500,
           type: 'base',
           max_pages: 5,
@@ -169,30 +172,42 @@ export async function GET(request: Request) {
           delivery_days: 3
         },
         {
-          category_id: formId,
-          name: 'Formatiranje – do 10 stranica',
-          description: 'Raspored sadržaja, margine, fonta i izvora do 10 stranica',
-          price_cents: 10000,
+          category_id: zavrsniId,
+          name: 'Završni rad – formatiranje',
+          description: 'Tehničko uređenje završnog rada prema uputama',
+          price_cents: 15000,
+          type: 'base',
+          max_pages: 30,
+          included_revisions: 2,
+          delivery_days: 5
+        },
+        {
+          category_id: prezentacijeId,
+          name: 'Izrada PPT prezentacije',
+          description: 'Izrada moderne PowerPoint prezentacije',
+          price_cents: 5000,
+          type: 'base',
+          max_pages: 15,
+          included_revisions: 1,
+          delivery_days: 2
+        },
+        {
+          category_id: ostaloId,
+          name: 'Lektura teksta',
+          description: 'Jezična i stilska obrada teksta',
+          price_cents: 3000,
           type: 'base',
           max_pages: 10,
           included_revisions: 1,
           delivery_days: 2
         },
         {
-          category_id: lekturaId,
+          category_id: ucenickiId,
           name: 'Express opcija',
           description: 'Brza isporuka u roku od 24 sata',
           price_cents: 2500,
           type: 'addon',
           included_revisions: 0
-        },
-        {
-          category_id: lekturaId,
-          name: 'Extra izmjena',
-          description: 'Dodatna revizija rada',
-          price_cents: 3000,
-          type: 'addon',
-          included_revisions: 1
         }
       ];
 

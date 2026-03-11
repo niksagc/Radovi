@@ -6,7 +6,8 @@ export default async function AdminCatalogPage() {
   
   const { data: categories } = await supabase
     .from('categories')
-    .select('*, items(*)');
+    .select('*, items(*)')
+    .order('sort_order', { ascending: true });
 
   return (
     <div>

@@ -7,7 +7,7 @@ export default async function NewServicePage({ searchParams }: { searchParams: P
   const { data: categories } = await supabase
     .from('categories')
     .select('*')
-    .order('name');
+    .order('sort_order', { ascending: true });
 
   const resolvedSearchParams = await searchParams;
 

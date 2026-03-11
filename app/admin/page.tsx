@@ -2,12 +2,16 @@ import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import UnreadBadge from '@/components/UnreadBadge';
 import DeleteOrderButton from '@/components/DeleteOrderButton';
+import AnalyticsChart from '@/components/admin/AnalyticsChart';
+import { format, subMonths, startOfMonth as getStartOfMonth, endOfMonth as getEndOfMonth } from 'date-fns';
+import { hr } from 'date-fns/locale';
 
 export default async function AdminDashboardPage() {
   const supabase = await createClient();
   
   const { data: { user } } = await supabase.auth.getUser();
   
+  // 1. Fetch recent orders
   const { data: orders } = await supabase
     .from('orders')
     .select('*, profiles(first_name, last_name, email), order_messages(created_at, sender_id)')
@@ -15,27 +19,110 @@ export default async function AdminDashboardPage() {
     .order('created_at', { ascending: false })
     .limit(10);
 
+  // 2. Fetch Active Orders Count
+  const { count: activeOrdersCount } = await supabase
+    .from('orders')
+    .select('*', { count: 'exact', head: true })
+    .eq('deleted_by_admin', false)
+    .not('status', 'in', '("Završeno","Otkazano","Isteklo")');
+
+  // 3. Fetch Revenue (This Month)
+  const now = new Date();
+  const startOfThisMonth = getStartOfMonth(now);
+
+  const { data: monthlyPayments } = await supabase
+    .from('payments')
+    .select('amount_cents')
+    .or('status.eq.succeeded,confirmed_by_admin.eq.true')
+    .gte('created_at', startOfThisMonth.toISOString());
+
+  const monthlyRevenue = (monthlyPayments?.reduce((sum, p) => sum + p.amount_cents, 0) || 0) / 100;
+
+  // 4. Fetch "New Messages" count
+  const { data: allActiveOrders } = await supabase
+    .from('orders')
+    .select('id, order_messages(created_at, sender_id)')
+    .eq('deleted_by_admin', false)
+    .not('status', 'in', '("Završeno","Otkazano","Isteklo")');
+
+  const newMessagesCount = allActiveOrders?.filter(order => {
+    const messages = order.order_messages || [];
+    if (messages.length === 0) return false;
+    const latestMessage = messages.sort((a: any, b: any) => 
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    )[0];
+    return latestMessage.sender_id !== user?.id;
+  }).length || 0;
+
+  // 5. Fetch Chart Data (Last 6 Months)
+  const chartData = [];
+  for (let i = 5; i >= 0; i--) {
+    const monthDate = subMonths(now, i);
+    const start = getStartOfMonth(monthDate);
+    const end = getEndOfMonth(monthDate);
+
+    const { data: monthPayments } = await supabase
+      .from('payments')
+      .select('amount_cents')
+      .or('status.eq.succeeded,confirmed_by_admin.eq.true')
+      .gte('created_at', start.toISOString())
+      .lte('created_at', end.toISOString());
+
+    const revenue = (monthPayments?.reduce((sum, p) => sum + p.amount_cents, 0) || 0) / 100;
+    
+    chartData.push({
+      name: format(monthDate, 'MMM', { locale: hr }),
+      revenue: revenue,
+      orders: 0 // We could also count orders if needed
+    });
+  }
+
+  // 6. Fetch Total Users Count
+  const { count: totalUsersCount } = await supabase
+    .from('profiles')
+    .select('*', { count: 'exact', head: true })
+    .eq('role', 'student');
+
+  // 7. Fetch New Inquiries Count
+  const { count: newInquiriesCount } = await supabase
+    .from('preorder_contacts')
+    .select('*', { count: 'exact', head: true })
+    .eq('status', 'new');
+
   return (
     <div>
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold text-zinc-900">Nadzorna ploča</h1>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-zinc-200">
           <h3 className="text-sm font-medium text-zinc-500">Aktivne narudžbe</h3>
           <p className="mt-2 text-3xl font-bold text-zinc-900">
-            {orders?.filter((o: any) => !['Završeno', 'Otkazano', 'Isteklo'].includes(o.status)).length || 0}
+            {activeOrdersCount || 0}
           </p>
         </div>
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-zinc-200">
           <h3 className="text-sm font-medium text-zinc-500">Nove poruke</h3>
-          <p className="mt-2 text-3xl font-bold text-zinc-900">0</p>
+          <p className="mt-2 text-3xl font-bold text-zinc-900">{newMessagesCount}</p>
+        </div>
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-zinc-200">
+          <h3 className="text-sm font-medium text-zinc-500">Novi upiti</h3>
+          <p className="mt-2 text-3xl font-bold text-zinc-900">{newInquiriesCount || 0}</p>
         </div>
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-zinc-200">
           <h3 className="text-sm font-medium text-zinc-500">Prihod (ovaj mjesec)</h3>
-          <p className="mt-2 text-3xl font-bold text-zinc-900">0.00 €</p>
+          <p className="mt-2 text-3xl font-bold text-zinc-900">{monthlyRevenue.toFixed(2)} €</p>
         </div>
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-zinc-200">
+          <h3 className="text-sm font-medium text-zinc-500">Ukupno korisnika</h3>
+          <p className="mt-2 text-3xl font-bold text-zinc-900">{totalUsersCount || 0}</p>
+        </div>
+      </div>
+
+      <div className="bg-white p-6 rounded-2xl shadow-sm border border-zinc-200 mb-8">
+        <h2 className="text-xl font-bold text-zinc-900 mb-6">Pregled prihoda</h2>
+        <AnalyticsChart data={chartData} />
       </div>
 
       <h2 className="text-xl font-bold text-zinc-900 mb-4">Nedavne narudžbe</h2>

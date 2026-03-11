@@ -9,9 +9,22 @@ export default async function CategoriesPage() {
   
   const { data: { user } } = await supabase.auth.getUser();
   
+  let role = 'student';
+  if (user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+    if (profile) {
+      role = profile.role;
+    }
+  }
+  
   const { data: categories } = await supabase
     .from('categories')
-    .select('*, items(*)');
+    .select('*, items(*)')
+    .order('sort_order', { ascending: true });
 
   const { data: items } = await supabase
     .from('items')
@@ -22,7 +35,7 @@ export default async function CategoriesPage() {
     <div className="min-h-screen bg-zinc-50 flex flex-col">
       {user ? (
         <div className="sticky top-0 z-50 w-full">
-          <UserHeader logoutAction={logout} />
+          <UserHeader logoutAction={logout} role={role} />
         </div>
       ) : (
         <header className="bg-white border-b border-zinc-200 sticky top-0 z-50">
