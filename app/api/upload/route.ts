@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     if (!exists) {
       await supabaseAdmin.storage.createBucket(bucket, {
         public: false,
-        fileSizeLimit: 10485760, // 10MB
+        fileSizeLimit: 10737418240, // 10GB
       });
     }
 

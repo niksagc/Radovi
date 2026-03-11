@@ -141,7 +141,7 @@ export default function ContactPage() {
                 onChange={(e) => setFile(e.target.files?.[0] || null)}
                 className="w-full text-sm text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
               />
-              <p className="mt-1 text-xs text-zinc-500">PDF, DOCX, PPTX, JPG, PNG (Max 10MB)</p>
+              <p className="mt-1 text-xs text-zinc-500">PDF, DOCX, PPTX, JPG, PNG (Max 10GB)</p>
             </div>
 
             <button

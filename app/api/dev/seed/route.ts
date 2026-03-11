@@ -134,7 +134,7 @@ export async function GET(request: Request) {
       if (!exists) {
         const { error: bErr } = await supabase.storage.createBucket(bucketName, {
           public: false,
-          fileSizeLimit: 10485760, // 10MB
+          fileSizeLimit: 10737418240, // 10GB
         });
         if (bErr) console.error(`Error creating bucket ${bucketName}:`, bErr);
         else console.log(`Bucket ${bucketName} created successfully`);

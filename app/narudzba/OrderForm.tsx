@@ -157,7 +157,7 @@ export default function OrderForm({ profile }: { profile: any }) {
           } catch (e) {
             // If response is not JSON, it might be "Request Entity Too Large"
             if (res.status === 413) {
-              errorMessage = 'Datoteka je prevelika. Maksimalna veličina je 10MB.';
+              errorMessage = 'Datoteka je prevelika. Maksimalna veličina je 10GB.';
             } else {
               errorMessage = `Greška na poslužitelju (${res.status})`;
             }

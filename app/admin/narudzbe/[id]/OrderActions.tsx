@@ -55,7 +55,7 @@ export default function OrderActions({ order }: { order: any }) {
           errorMessage = errorData.error || errorMessage;
         } catch (e) {
           if (res.status === 413) {
-            errorMessage = 'Datoteka je prevelika. Maksimalna veličina je 10MB.';
+            errorMessage = 'Datoteka je prevelika. Maksimalna veličina je 10GB.';
           } else {
             errorMessage = `Greška na poslužitelju (${res.status})`;
           }
