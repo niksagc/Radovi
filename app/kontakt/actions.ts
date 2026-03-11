@@ -20,7 +20,7 @@ export async function submitContactForm(formData: FormData) {
   // 1. Auto-registration check
   try {
     const { data: existingUser } = await supabaseAdmin.auth.admin.listUsers();
-    const userExists = existingUser.users.some(u => u.email === email);
+    const userExists = existingUser?.users?.some((u: any) => u.email === email) || false;
 
     if (!userExists) {
       // Create new user
