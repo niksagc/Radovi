@@ -36,7 +36,7 @@ export default async function AdminDashboardPage() {
     .or('status.eq.succeeded,confirmed_by_admin.eq.true')
     .gte('created_at', startOfThisMonth.toISOString());
 
-  const monthlyRevenue = (monthlyPayments?.reduce((sum, p) => sum + p.amount_cents, 0) || 0) / 100;
+  const monthlyRevenue = (monthlyPayments?.reduce((sum: number, p: any) => sum + p.amount_cents, 0) || 0) / 100;
 
   // 4. Fetch "New Messages" count
   const { data: allActiveOrders } = await supabase
