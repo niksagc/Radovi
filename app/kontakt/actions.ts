@@ -80,7 +80,7 @@ export async function submitContactForm(formData: FormData) {
     if (!buckets?.find((b: any) => b.name === 'preorders')) {
       await supabaseAdmin.storage.createBucket('preorders', {
         public: false,
-        fileSizeLimit: 10485760, // 10GB
+        fileSizeLimit: 10737418240, // 10GB
       });
     }
 
@@ -118,7 +118,7 @@ export async function submitContactForm(formData: FormData) {
       .select('notification_emails')
       .single();
     
-    const adminEmail = settings?.notification_emails?.[0] || process.env.ADMIN_EMAIL || 'nikoladuric025@gmail.com';
+    const adminEmail = settings?.notification_emails?.[0] || process.env.ADMIN_EMAIL || 'info@studyworks.work.gd';
 
     await Promise.all([
       sendPreorderConfirmationEmail({ email, name, subject }),
