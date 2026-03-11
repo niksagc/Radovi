@@ -1,27 +1,12 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
 // Configuration from environment variables
-const SMTP_HOST = process.env.SMTP_HOST || 'smtp.zoho.com';
-const SMTP_PORT = parseInt(process.env.SMTP_PORT || '465', 10);
-const SMTP_USER = process.env.SMTP_USER;
-const SMTP_PASS = process.env.SMTP_PASS;
-const FROM_EMAIL = process.env.FROM_EMAIL || SMTP_USER || 'info@studyworks.work.gd';
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const FROM_EMAIL = process.env.FROM_EMAIL || 'info@studyworks.work.gd';
 const FROM_NAME = process.env.FROM_NAME || 'StudyWorks';
 
-// Create a transporter object using the default SMTP transport
-const transporter = SMTP_USER && SMTP_PASS ? nodemailer.createTransport({
-  host: SMTP_HOST,
-  port: SMTP_PORT,
-  secure: SMTP_PORT === 465, // true for 465, false for 587
-  auth: {
-    user: SMTP_USER,
-    pass: SMTP_PASS,
-  },
-  // Zoho requires this for some environments if using port 587
-  tls: {
-    rejectUnauthorized: false
-  }
-}) : null;
+// Initialize Resend
+const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
 
 export async function sendEmail({
   to,
@@ -32,36 +17,34 @@ export async function sendEmail({
   subject: string;
   html: string;
 }) {
-  if (!transporter) {
-    console.warn('SMTP configuration is missing. Email not sent:', subject);
-    return { success: false, error: 'SMTP configuration (SMTP_USER/SMTP_PASS) is missing.' };
+  if (!resend) {
+    console.warn('Resend API ključ nedostaje. Email nije poslan:', subject);
+    return { success: false, error: 'Resend API ključ (RESEND_API_KEY) nedostaje.' };
   }
 
-  console.log(`Sending email to: ${to}, subject: ${subject}, from: ${FROM_NAME} <${FROM_EMAIL}> via Zoho SMTP`);
+  console.log(`Pokušaj slanja emaila preko Resend-a:
+    TO: ${to}
+    FROM: ${FROM_NAME} <${FROM_EMAIL}>
+  `);
 
   try {
-    const info = await transporter.sendMail({
-      from: `"${FROM_NAME}" <${FROM_EMAIL}>`,
-      to,
+    const { data, error } = await resend.emails.send({
+      from: `${FROM_NAME} <${FROM_EMAIL}>`,
+      to: [to],
       subject,
       html,
     });
 
-    console.log('Email sent successfully:', info.messageId);
-    return { success: true, data: info };
-  } catch (error: any) {
-    console.error('SMTP error:', error);
-    
-    let errorMessage = error.message;
-    if (errorMessage.includes('535') || errorMessage.includes('Authentication Failed')) {
-      errorMessage = 'Greška 535: Prijava nije uspjela. Provjerite SMTP_USER i SMTP_PASS. VAŽNO: Ako imate 2FA, MORATE koristiti "App Password", a ne običnu lozinku. Također provjerite je li SMTP omogućen u Zoho postavkama.';
-    } else if (errorMessage.includes('Relay Access Denied')) {
-      errorMessage = 'Pristup odbijen: Provjerite je li FROM_EMAIL ispravno postavljen na vašu Zoho adresu.';
-    } else if (errorMessage.includes('ETIMEDOUT')) {
-      errorMessage = 'Veza je istekla: Provjerite SMTP_HOST i SMTP_PORT (Zoho obično koristi 465).';
+    if (error) {
+      console.error('Resend greška:', error);
+      return { success: false, error: error.message };
     }
 
-    return { success: false, error: errorMessage };
+    console.log('Email uspješno poslan:', data?.id);
+    return { success: true, data };
+  } catch (error: any) {
+    console.error('Neočekivana greška pri slanju emaila:', error);
+    return { success: false, error: error.message || 'Neočekivana greška pri slanju emaila.' };
   }
 }
 
