@@ -1,13 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { Mail, Calendar, User, FileText, CheckCircle, X, Send } from 'lucide-react';
+import { Mail, Calendar, User, FileText, CheckCircle, X, Send, Trash2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 
 export default function UpitItem({ upit }: { upit: any }) {
   const [loading, setLoading] = useState(false);
   const [showReplyModal, setShowReplyModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [replyMessage, setReplyMessage] = useState('');
   const [sendingReply, setSendingReply] = useState(false);
   const router = useRouter();
@@ -26,6 +27,33 @@ export default function UpitItem({ upit }: { upit: any }) {
     } catch (error) {
       console.error('Error updating status:', error);
       alert('Greška pri ažuriranju statusa.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    setLoading(true);
+    try {
+      // First delete associated files from storage if any
+      if (upit.files && upit.files.length > 0) {
+        const filePaths = upit.files.map((f: any) => f.path);
+        await supabase.storage.from('preorders').remove(filePaths);
+      }
+
+      // Delete the record (cascade will handle file records in DB)
+      const { error } = await supabase
+        .from('preorder_contacts')
+        .delete()
+        .eq('id', upit.id);
+
+      if (error) throw error;
+      
+      setShowDeleteConfirm(false);
+      router.refresh();
+    } catch (error) {
+      console.error('Error deleting inquiry:', error);
+      alert('Greška pri brisanju upita.');
     } finally {
       setLoading(false);
     }
@@ -140,23 +168,34 @@ export default function UpitItem({ upit }: { upit: any }) {
             </div>
           )}
         </div>
-        <div className="bg-zinc-950/50 px-6 py-4 border-t border-zinc-800 flex justify-end gap-3">
-          {upit.status !== 'replied' && (
+        <div className="bg-zinc-950/50 px-6 py-4 border-t border-zinc-800 flex justify-between items-center">
+          <div>
             <button 
-              onClick={markAsReplied}
-              disabled={loading}
-              className="px-4 py-2 text-sm font-medium text-zinc-400 hover:text-white transition-colors disabled:opacity-50"
+              onClick={() => setShowDeleteConfirm(true)}
+              className="p-2 text-zinc-500 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
+              title="Obriši upit"
             >
-              {loading ? 'Obrađivanje...' : 'Označi kao obrađeno'}
+              <Trash2 size={20} />
             </button>
-          )}
-          <button 
-            onClick={() => setShowReplyModal(true)}
-            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
-          >
-            <Mail size={16} />
-            Odgovori na upit
-          </button>
+          </div>
+          <div className="flex gap-3">
+            {upit.status !== 'replied' && (
+              <button 
+                onClick={markAsReplied}
+                disabled={loading}
+                className="px-4 py-2 text-sm font-medium text-zinc-400 hover:text-white transition-colors disabled:opacity-50"
+              >
+                {loading ? 'Obrađivanje...' : 'Označi kao obrađeno'}
+              </button>
+            )}
+            <button 
+              onClick={() => setShowReplyModal(true)}
+              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
+            >
+              <Mail size={16} />
+              Odgovori na upit
+            </button>
+          </div>
         </div>
       </div>
 
@@ -223,6 +262,37 @@ export default function UpitItem({ upit }: { upit: any }) {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="bg-zinc-900 border border-zinc-800 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className="p-6 text-center">
+              <div className="w-16 h-16 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Trash2 size={32} />
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">Obriši upit?</h3>
+              <p className="text-zinc-400 mb-6">
+                Jeste li sigurni da želite obrisati ovaj upit? Ova radnja je trajna i ne može se poništiti.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="flex-1 px-4 py-3 bg-zinc-800 hover:bg-zinc-700 text-white font-semibold rounded-xl transition-all"
+                >
+                  Odustani
+                </button>
+                <button
+                  onClick={handleDelete}
+                  disabled={loading}
+                  className="flex-1 px-4 py-3 bg-red-600 hover:bg-red-500 text-white font-semibold rounded-xl transition-all disabled:opacity-50"
+                >
+                  {loading ? 'Brisanje...' : 'Obriši'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
