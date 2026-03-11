@@ -45,7 +45,7 @@ export default async function AdminDashboardPage() {
     .eq('deleted_by_admin', false)
     .not('status', 'in', '("Završeno","Otkazano","Isteklo")');
 
-  const newMessagesCount = allActiveOrders?.filter(order => {
+  const newMessagesCount = allActiveOrders?.filter((order: any) => {
     const messages = order.order_messages || [];
     if (messages.length === 0) return false;
     const latestMessage = messages.sort((a: any, b: any) => 
