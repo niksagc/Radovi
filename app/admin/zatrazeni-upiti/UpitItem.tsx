@@ -109,11 +109,19 @@ export default function UpitItem({ upit }: { upit: any }) {
               <div>
                 <div className="flex items-center gap-2">
                   <h3 className="text-lg font-semibold text-white">{upit.name}</h3>
-                  {upit.status === 'replied' && (
+                  {upit.status === 'replied' ? (
                     <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 text-[10px] uppercase font-bold rounded-full border border-emerald-500/20">
                       Obrađeno
                     </span>
-                  )}
+                  ) : upit.status === 'new' ? (
+                    <span className="px-2 py-0.5 bg-indigo-500/10 text-indigo-400 text-[10px] uppercase font-bold rounded-full border border-indigo-500/20">
+                      Novo
+                    </span>
+                  ) : upit.status === 'converted' ? (
+                    <span className="px-2 py-0.5 bg-amber-500/10 text-amber-400 text-[10px] uppercase font-bold rounded-full border border-amber-500/20">
+                      Pretvoreno u narudžbu
+                    </span>
+                  ) : null}
                 </div>
                 <div className="flex items-center gap-2 text-zinc-400 text-sm">
                   <Mail size={14} />

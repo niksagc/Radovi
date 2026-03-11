@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { sendEmail } from '@/lib/email';
+import { revalidatePath } from 'next/cache';
 
 export async function POST(request: Request) {
   try {
@@ -53,10 +54,17 @@ export async function POST(request: Request) {
     }
 
     // Update inquiry status
-    await supabase
+    const { error: updateError } = await supabase
       .from('preorder_contacts')
       .update({ status: 'replied' })
       .eq('id', inquiryId);
+
+    if (updateError) {
+      console.error('Error updating inquiry status:', updateError);
+    }
+
+    // Revalidate the admin inquiries page
+    revalidatePath('/admin/zatrazeni-upiti');
 
     return NextResponse.json({ success: true, message: 'Odgovor je uspješno poslan!' });
   } catch (error: any) {

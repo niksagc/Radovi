@@ -2,6 +2,8 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { Mail } from 'lucide-react';
 import UpitItem from './UpitItem';
 
+export const dynamic = 'force-dynamic';
+
 export default async function ZatrazeniUpitiPage() {
   const supabase = createAdminClient();
 
