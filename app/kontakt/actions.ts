@@ -80,7 +80,7 @@ export async function submitContactForm(formData: FormData) {
     if (!buckets?.find((b: any) => b.name === 'preorders')) {
       await supabaseAdmin.storage.createBucket('preorders', {
         public: false,
-        fileSizeLimit: 10485760, // 10MB
+        fileSizeLimit: 10485760, // 10GB
       });
     }
 
