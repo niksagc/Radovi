@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import CreateUserModal from './CreateUserModal';
 
 export default async function AdminUsersPage() {
   const supabase = await createClient();
@@ -12,6 +13,7 @@ export default async function AdminUsersPage() {
     <div>
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold text-zinc-900">Korisnici</h1>
+        <CreateUserModal />
       </div>
       
       {users && users.length > 0 ? (

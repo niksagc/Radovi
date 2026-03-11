@@ -1,7 +1,7 @@
 'use server';
 
 import { createAdminClient } from '@/lib/supabase/admin';
-import { sendPreorderConfirmationEmail, sendPreorderAdminNotificationEmail } from '@/lib/email';
+import { sendPreorderConfirmationEmail, sendPreorderAdminNotificationEmail, sendCredentialsEmail } from '@/lib/email';
 
 export async function submitContactForm(formData: FormData) {
   const name = formData.get('name') as string;
@@ -17,7 +17,41 @@ export async function submitContactForm(formData: FormData) {
 
   const supabaseAdmin = createAdminClient();
   
-  // 1. Insert contact
+  // 1. Auto-registration check
+  try {
+    const { data: existingUser } = await supabaseAdmin.auth.admin.listUsers();
+    const userExists = existingUser.users.some(u => u.email === email);
+
+    if (!userExists) {
+      // Create new user
+      const password = Math.random().toString(36).substring(2, 12);
+      const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: { first_name: name.split(' ')[0], last_name: name.split(' ').slice(1).join(' ') }
+      });
+
+      if (!createError && newUser.user) {
+        // Create profile
+        await supabaseAdmin.from('profiles').insert({
+          id: newUser.user.id,
+          email,
+          first_name: name.split(' ')[0],
+          last_name: name.split(' ').slice(1).join(' '),
+          role: 'student'
+        });
+
+        // Send credentials email
+        await sendCredentialsEmail({ email, name, password });
+      }
+    }
+  } catch (regError) {
+    console.error('Auto-registration error:', regError);
+    // Continue with inquiry even if registration fails
+  }
+
+  // 2. Insert contact
   const { data: contact, error: contactError } = await supabaseAdmin
     .from('preorder_contacts')
     .insert({

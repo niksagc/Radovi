@@ -111,3 +111,46 @@ export async function sendPreorderAdminNotificationEmail({
     `,
   });
 }
+
+export async function sendCredentialsEmail({
+  email,
+  name,
+  password,
+}: {
+  email: string;
+  name: string;
+  password?: string;
+}) {
+  const loginUrl = `${process.env.APP_URL}/login`;
+  
+  return sendEmail({
+    to: email,
+    subject: `Vaši pristupni podaci za StudyWorks`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 12px; padding: 30px; color: #1f2937;">
+        <h1 style="color: #4f46e5; margin-bottom: 20px;">Dobrodošli u StudyWorks!</h1>
+        <p>Poštovani/a <strong>${name}</strong>,</p>
+        <p>Vaš račun je uspješno kreiran. Sada se možete prijaviti na platformu kako biste pratili svoje upite i narudžbe.</p>
+        
+        ${password ? `
+        <div style="background: #f9fafb; border: 1px solid #f3f4f6; border-radius: 8px; padding: 20px; margin: 25px 0;">
+          <p style="margin-top: 0; font-weight: 600; color: #4b5563;">Vaši podaci za prijavu:</p>
+          <p style="margin: 5px 0;"><strong>Email:</strong> ${email}</p>
+          <p style="margin: 5px 0;"><strong>Lozinka:</strong> <code style="background: #e5e7eb; padding: 2px 6px; border-radius: 4px;">${password}</code></p>
+          <p style="font-size: 12px; color: #9ca3af; margin-top: 15px;">* Preporučujemo da promijenite lozinku nakon prve prijave.</p>
+        </div>
+        ` : `
+        <p>Možete se prijaviti koristeći svoj email: <strong>${email}</strong>.</p>
+        `}
+        
+        <div style="text-align: center; margin-top: 30px;">
+          <a href="${loginUrl}" style="background: #4f46e5; color: white; padding: 12px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Prijavi se odmah</a>
+        </div>
+        
+        <hr style="border: 0; border-top: 1px solid #f3f4f6; margin: 30px 0;" />
+        <p style="font-size: 14px; color: #6b7280;">Ako niste zatražili ovaj račun, slobodno zanemarite ovaj email.</p>
+        <p style="font-size: 14px; color: #6b7280;">Srdačan pozdrav,<br />StudyWorks Tim</p>
+      </div>
+    `,
+  });
+}
