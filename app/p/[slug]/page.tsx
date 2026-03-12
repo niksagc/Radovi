@@ -21,7 +21,35 @@ export default async function PublicPage({ params }: { params: Promise<{ slug: s
     if (resolvedParams.slug === 'o-nama') {
       staticPage = {
         title: 'O nama',
-        content: 'StudyWorks je platforma gdje studenti mogu naručiti pomoć pri uređivanju, formatiranju i pripremi školskih dokumenata kao što su eseji, seminarski radovi, završni radovi i PowerPoint prezentacije. Naš tim stručnjaka stoji vam na raspolaganju kako bi vaše radove učinio kvalitetnijima i profesionalnijima.'
+        content: `StudyWorks je platforma koja pomaže učenicima i studentima u izradi školskih i akademskih radova. Naš cilj je olakšati proces pisanja, istraživanja i organizacije sadržaja kako bi korisnici mogli dobiti kvalitetan, strukturiran i pregledan rad.
+
+Razumijemo da pisanje seminarskih, završnih ili drugih školskih radova često može biti zahtjevno i vremenski ograničeno. Zato smo pokrenuli StudyWorks – mjesto gdje se može dobiti pomoć u pripremi različitih vrsta radova.
+
+### Što radimo
+
+StudyWorks pruža pomoć pri izradi različitih vrsta sadržaja, uključujući:
+
+* završne radove
+* seminarske radove
+* učeničke projekte i prezentacije
+* životopise (CV) i motivacijska pisma
+* strukturiranje i organizaciju teksta
+* pomoć pri istraživanju tema
+
+Naš fokus je na jasnoći, kvaliteti i prilagodbi sadržaja potrebama korisnika.
+
+### Naša misija
+
+Naša misija je pomoći učenicima i studentima da lakše savladaju školske i akademske izazove, a i da drugim korisnicima olakšamo izradu životopisa za posao i ostalih potrebnih pisanih radova. Vjerujemo da svatko zaslužuje pristup kvalitetnim informacijama i dobro strukturiranim materijalima koji pomažu u učenju i napredovanju.
+
+### Zašto StudyWorks
+
+* jednostavan i brz proces
+* kvalitetno strukturirani sadržaji
+* prilagođeno učenicima i studentima i ostalim korisnicima
+* podrška pri izradi različitih vrsta radova
+
+StudyWorks je nastao iz ideje da se učenicima i studentima pruži praktična pomoć u trenucima kada im je to najpotrebnije.`
       };
     } else if (resolvedParams.slug === 'uvjeti-poslovanja') {
       staticPage = {
