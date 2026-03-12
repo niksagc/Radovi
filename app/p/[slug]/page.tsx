@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
 import Link from 'next/link';
-import UserHeader from '@/app/dashboard/UserHeader';
+import Header from '@/components/Header';
 import { logout } from '@/app/login/actions';
 
 export default async function PublicPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -36,12 +36,24 @@ export default async function PublicPage({ params }: { params: Promise<{ slug: s
   const pageToDisplay = page || staticPage;
   
   const { data: { user } } = await supabase.auth.getUser();
+  
+  let role = 'student';
+  if (user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+    if (profile) {
+      role = profile.role;
+    }
+  }
 
   return (
     <div className="min-h-screen bg-zinc-50 flex flex-col">
       {user ? (
         <div className="sticky top-0 z-50 w-full">
-          <UserHeader logoutAction={logout} />
+          <Header logoutAction={logout} role={role} />
         </div>
       ) : (
         <header className="bg-white border-b border-zinc-200 sticky top-0 z-50">

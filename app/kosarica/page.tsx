@@ -5,13 +5,14 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import UserHeader from '../dashboard/UserHeader';
+import Header from '@/components/Header';
 import { logout } from '@/app/login/actions';
 
 export default function CartPage() {
   const { items, removeItem, updateQuantity, clearCart } = useCartStore();
   const [mounted, setMounted] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [role, setRole] = useState<string>('student');
   const [appliedDiscount, setAppliedDiscount] = useState<any>(null);
   const [discountInput, setDiscountInput] = useState('');
   const [discountError, setDiscountError] = useState('');
@@ -28,6 +29,14 @@ export default function CartPage() {
     const checkUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+        if (profile) setRole(profile.role);
+      }
     };
     
     checkUser();
@@ -96,7 +105,7 @@ export default function CartPage() {
     <div className="min-h-screen bg-zinc-50 flex flex-col">
       {user ? (
         <div className="sticky top-0 z-50 w-full">
-          <UserHeader logoutAction={logout} />
+          <Header logoutAction={logout} role={role} />
         </div>
       ) : (
         <header className="bg-white border-b border-zinc-200 sticky top-0 z-10">

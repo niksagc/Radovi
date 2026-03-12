@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import AddToCartButton from './AddToCartButton';
-import UserHeader from '../../dashboard/UserHeader';
+import Header from '@/components/Header';
 import { logout } from '@/app/login/actions';
 import { Star } from 'lucide-react';
 
@@ -11,6 +11,18 @@ export default async function ServiceDetailsPage({ params }: { params: Promise<{
   const resolvedParams = await params;
   
   const { data: { user } } = await supabase.auth.getUser();
+  
+  let role = 'student';
+  if (user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+    if (profile) {
+      role = profile.role;
+    }
+  }
   
   const { data: item } = await supabase
     .from('items')
@@ -38,7 +50,7 @@ export default async function ServiceDetailsPage({ params }: { params: Promise<{
     <div className="min-h-screen bg-zinc-50 flex flex-col">
       {user ? (
         <div className="sticky top-0 z-50 w-full">
-          <UserHeader logoutAction={logout} />
+          <Header logoutAction={logout} role={role} />
         </div>
       ) : (
         <header className="bg-white border-b border-zinc-200 sticky top-0 z-50">

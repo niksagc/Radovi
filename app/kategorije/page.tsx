@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
-import UserHeader from '../dashboard/UserHeader';
+import Header from '@/components/Header';
 import { logout } from '@/app/login/actions';
 import Catalog from '@/components/Catalog';
 
@@ -35,7 +35,7 @@ export default async function CategoriesPage() {
     <div className="min-h-screen bg-zinc-50 flex flex-col">
       {user ? (
         <div className="sticky top-0 z-50 w-full">
-          <UserHeader logoutAction={logout} role={role} />
+          <Header logoutAction={logout} role={role} />
         </div>
       ) : (
         <header className="bg-white border-b border-zinc-200 sticky top-0 z-50">

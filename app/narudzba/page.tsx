@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import OrderForm from './OrderForm';
-import UserHeader from '../dashboard/UserHeader';
+import Header from '@/components/Header';
 import { logout } from '@/app/login/actions';
 
 export default async function CheckoutPage() {
@@ -56,7 +56,7 @@ export default async function CheckoutPage() {
   return (
     <div className="min-h-screen bg-zinc-50 flex flex-col">
       <div className="sticky top-0 z-50 w-full">
-        <UserHeader logoutAction={logout} role={profile?.role} />
+        <Header logoutAction={logout} role={profile?.role} />
       </div>
 
       <main className="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-12 relative z-0">

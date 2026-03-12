@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { notFound, redirect } from 'next/navigation';
 import PaymentOptions from './PaymentOptions';
 import Link from 'next/link';
-import UserHeader from '../../dashboard/UserHeader';
+import Header from '@/components/Header';
 import { logout } from '@/app/login/actions';
 
 export default async function PaymentPage({ params }: { params: Promise<{ id: string }> }) {
@@ -13,6 +13,18 @@ export default async function PaymentPage({ params }: { params: Promise<{ id: st
   
   if (!user) {
     redirect('/login');
+  }
+
+  let role = 'student';
+  if (user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+    if (profile) {
+      role = profile.role;
+    }
   }
 
   const { data: order } = await supabase
@@ -43,7 +55,7 @@ export default async function PaymentPage({ params }: { params: Promise<{ id: st
   return (
     <div className="min-h-screen bg-zinc-50 flex flex-col">
       <div className="sticky top-0 z-50 w-full">
-        <UserHeader logoutAction={logout} />
+        <Header logoutAction={logout} role={role} />
       </div>
 
       <main className="flex-grow max-w-3xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-12 relative z-0">
