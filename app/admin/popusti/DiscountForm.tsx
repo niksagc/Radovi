@@ -8,6 +8,7 @@ export default function DiscountForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [isUserSpecific, setIsUserSpecific] = useState(false);
   const router = useRouter();
   const supabase = createClient();
 
@@ -18,26 +19,45 @@ export default function DiscountForm() {
     setSuccess(false);
 
     const formData = new FormData(e.currentTarget);
-    const discount = {
-      name: formData.get('name') as string,
-      type: formData.get('type') as string,
-      value: parseFloat(formData.get('value') as string),
-      is_active: true,
-    };
+    
+    if (isUserSpecific) {
+      const response = await fetch('/api/admin/generate-discount', {
+        method: 'POST',
+        body: JSON.stringify({
+          email: formData.get('email'),
+          value: parseFloat(formData.get('value') as string),
+          expiresAt: formData.get('expiresAt'),
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setError(data.error || 'Greška pri generiranju popusta.');
+      } else {
+        setSuccess(true);
+        (e.target as HTMLFormElement).reset();
+      }
+    } else {
+      const template = {
+        name: formData.get('name') as string,
+        value: parseFloat(formData.get('value') as string),
+        expires_at: formData.get('expiresAt') || null,
+        is_active: true,
+      };
 
-    try {
-      const { error: insertError } = await supabase
-        .from('discounts')
-        .insert([discount]);
+      try {
+        const { error: insertError } = await supabase
+          .from('discount_templates')
+          .insert([template]);
 
-      if (insertError) throw insertError;
+        if (insertError) throw insertError;
 
-      setSuccess(true);
-      router.refresh();
-      (e.target as HTMLFormElement).reset();
-    } catch (err: any) {
-      console.error('Discount insert error:', err);
-      setError(err.message || 'Greška pri dodavanju popusta.');
+        setSuccess(true);
+        router.refresh();
+        (e.target as HTMLFormElement).reset();
+      } catch (err: any) {
+        console.error('Template insert error:', err);
+        setError(err.message || 'Greška pri dodavanju predloška.');
+      }
     }
     
     setLoading(false);
@@ -52,53 +72,100 @@ export default function DiscountForm() {
       )}
       {success && (
         <div className="bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded-xl text-sm">
-          Popust je uspješno dodan.
+          {isUserSpecific ? 'Popust je generiran i poslan korisniku.' : 'Popust je uspješno dodan.'}
         </div>
       )}
 
-      <div>
-        <label className="block text-sm font-medium text-zinc-700 mb-1">Naziv popusta</label>
+      <div className="flex items-center space-x-2">
         <input
-          type="text"
-          name="name"
-          required
-          className="w-full rounded-xl border border-zinc-300 px-4 py-2 focus:ring-indigo-500 focus:border-indigo-500"
-          placeholder="npr. Popust za prvu narudžbu"
+          type="checkbox"
+          id="isUserSpecific"
+          checked={isUserSpecific}
+          onChange={(e) => setIsUserSpecific(e.target.checked)}
+          className="rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500"
         />
+        <label htmlFor="isUserSpecific" className="text-sm font-medium text-zinc-700">Generiraj popust za određenog korisnika</label>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label className="block text-sm font-medium text-zinc-700 mb-1">Tip popusta</label>
-          <select
-            name="type"
-            required
-            className="w-full rounded-xl border border-zinc-300 px-4 py-2 focus:ring-indigo-500 focus:border-indigo-500"
-          >
-            <option value="first_order">Prva narudžba</option>
-            <option value="bulk_items">2+ artikla</option>
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-zinc-700 mb-1">Postotak (%)</label>
-          <input
-            type="number"
-            name="value"
-            required
-            min="0"
-            max="100"
-            className="w-full rounded-xl border border-zinc-300 px-4 py-2 focus:ring-indigo-500 focus:border-indigo-500"
-            placeholder="npr. 10"
-          />
-        </div>
-      </div>
+      {!isUserSpecific ? (
+        <>
+          <div>
+            <label className="block text-sm font-medium text-zinc-700 mb-1">Naziv popusta</label>
+            <input
+              type="text"
+              name="name"
+              required
+              className="w-full rounded-xl border border-zinc-300 px-4 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+              placeholder="npr. Popust za prvu narudžbu"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-zinc-700 mb-1">Postotak (%)</label>
+              <input
+                type="number"
+                name="value"
+                required
+                min="0"
+                max="100"
+                className="w-full rounded-xl border border-zinc-300 px-4 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+                placeholder="npr. 10"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-zinc-700 mb-1">Datum isteka (opcionalno)</label>
+              <input
+                type="date"
+                name="expiresAt"
+                className="w-full rounded-xl border border-zinc-300 px-4 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+              />
+            </div>
+          </div>
+        </>
+      ) : (
+        <>
+          <div>
+            <label className="block text-sm font-medium text-zinc-700 mb-1">Email korisnika</label>
+            <input
+              type="email"
+              name="email"
+              required
+              className="w-full rounded-xl border border-zinc-300 px-4 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+              placeholder="korisnik@email.com"
+            />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-zinc-700 mb-1">Postotak (%)</label>
+              <input
+                type="number"
+                name="value"
+                required
+                min="0"
+                max="100"
+                className="w-full rounded-xl border border-zinc-300 px-4 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+                placeholder="npr. 10"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-zinc-700 mb-1">Datum isteka (opcionalno)</label>
+              <input
+                type="date"
+                name="expiresAt"
+                className="w-full rounded-xl border border-zinc-300 px-4 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+              />
+            </div>
+          </div>
+        </>
+      )}
 
       <button
         type="submit"
         disabled={loading}
         className="w-full py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-colors shadow-sm text-sm disabled:opacity-70"
       >
-        {loading ? 'Spremanje...' : 'Spremi popust'}
+        {loading ? 'Spremanje...' : (isUserSpecific ? 'Generiraj i pošalji popust' : 'Spremi popust')}
       </button>
     </form>
   );

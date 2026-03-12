@@ -12,8 +12,9 @@ export default function CartPage() {
   const { items, removeItem, updateQuantity, clearCart } = useCartStore();
   const [mounted, setMounted] = useState(false);
   const [user, setUser] = useState<any>(null);
-  const [discounts, setDiscounts] = useState<any[]>([]);
-  const [disabledDiscounts, setDisabledDiscounts] = useState<string[]>([]);
+  const [appliedDiscount, setAppliedDiscount] = useState<any>(null);
+  const [discountInput, setDiscountInput] = useState('');
+  const [discountError, setDiscountError] = useState('');
   const router = useRouter();
   const supabase = createClient();
 
@@ -21,22 +22,20 @@ export default function CartPage() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
     
+    const savedDiscount = localStorage.getItem('appliedDiscount');
+    if (savedDiscount) setAppliedDiscount(JSON.parse(savedDiscount));
+    
     const checkUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
     };
     
-    const fetchDiscounts = async () => {
-      const { data } = await supabase
-        .from('discounts')
-        .select('*')
-        .eq('is_active', true);
-      if (data) setDiscounts(data);
-    };
-    
     checkUser();
-    fetchDiscounts();
   }, [supabase.auth]);
+
+  useEffect(() => {
+    localStorage.setItem('appliedDiscount', JSON.stringify(appliedDiscount));
+  }, [appliedDiscount]);
 
   if (!mounted) return null;
 
@@ -44,22 +43,49 @@ export default function CartPage() {
   const addonsTotalCents = items.filter(i => i.type === 'addon').reduce((total, item) => total + (item.priceCents * item.quantity), 0);
   const totalCents = subtotalCents + addonsTotalCents;
 
-  // Apply discounts
-  const appliedDiscounts = [];
-  
-  // 1. Bulk items discount (2+ items)
-  const bulkDiscount = discounts.find(d => d.type === 'bulk_items');
-  if (bulkDiscount && items.length >= 2 && !disabledDiscounts.includes(bulkDiscount.id)) {
-    appliedDiscounts.push(bulkDiscount);
-  }
+  const handleApplyDiscount = async () => {
+    setDiscountError('');
+    
+    // Check global discounts
+    let { data: discount, error: discountError } = await supabase
+      .from('discounts')
+      .select('*')
+      .eq('code', discountInput)
+      .eq('is_active', true)
+      .single();
 
-  // 2. First order discount (if user is logged in and it's their first order)
-  const firstOrderDiscount = discounts.find(d => d.type === 'first_order');
-  if (firstOrderDiscount && user && !disabledDiscounts.includes(firstOrderDiscount.id)) {
-    appliedDiscounts.push(firstOrderDiscount);
-  }
+    // If not found in global, check user-specific discounts
+    if (discountError || !discount) {
+      if (user) {
+        const { data: userDiscount, error: userDiscountError } = await supabase
+          .from('user_discounts')
+          .select('*')
+          .eq('code', discountInput)
+          .eq('user_id', user.id)
+          .eq('is_used', false)
+          .single();
+          
+        if (!userDiscountError && userDiscount) {
+          // Check expiry
+          if (userDiscount.expires_at && new Date(userDiscount.expires_at) < new Date()) {
+            setDiscountError('Kod je istekao.');
+            return;
+          }
+          discount = userDiscount;
+        }
+      }
+    }
 
-  const discountAmountCents = appliedDiscounts.reduce((sum, d) => sum + Math.round(totalCents * (d.value / 100)), 0);
+    if (!discount) {
+      setDiscountError('Nevažeći kod popusta.');
+      return;
+    }
+
+    setAppliedDiscount(discount);
+    setDiscountInput('');
+  };
+
+  const discountAmountCents = appliedDiscount ? Math.round(totalCents * (appliedDiscount.value / 100)) : 0;
   const finalTotalCents = Math.max(0, totalCents - discountAmountCents);
 
   const handleCheckout = () => {
@@ -178,20 +204,42 @@ export default function CartPage() {
                     <span>{(addonsTotalCents / 100).toFixed(2)} €</span>
                   </div>
                 )}
-                  {appliedDiscounts.map((d: any) => (
-                    <div key={d.id} className="flex justify-between text-emerald-600 font-medium">
+                  {appliedDiscount && (
+                    <div className="flex justify-between text-emerald-600 font-medium">
                       <span>
-                        Popust: {d.name} 
+                        Popust: {appliedDiscount.code} 
                         <button 
-                          onClick={() => setDisabledDiscounts([...disabledDiscounts, d.id])} 
+                          onClick={() => setAppliedDiscount(null)} 
                           className="text-xs text-red-500 underline ml-2 hover:text-red-700"
                         >
                           Ukloni
                         </button>
                       </span>
-                      <span>-{(Math.round(totalCents * (d.value / 100)) / 100).toFixed(2)} €</span>
+                      <span>-{(Math.round(totalCents * (appliedDiscount.value / 100)) / 100).toFixed(2)} €</span>
                     </div>
-                  ))}
+                  )}
+                  
+                  {!appliedDiscount && (
+                    <div className="mt-4">
+                      <h3 className="text-sm font-medium text-zinc-900 mb-2">Imate kod za popust?</h3>
+                      <div className="flex gap-2">
+                        <input 
+                          type="text" 
+                          value={discountInput}
+                          onChange={(e) => setDiscountInput(e.target.value)}
+                          className="flex-grow rounded-xl border border-zinc-300 px-4 py-2 text-sm"
+                          placeholder="Unesite kod"
+                        />
+                        <button 
+                          onClick={handleApplyDiscount}
+                          className="px-4 py-2 bg-zinc-900 text-white text-sm font-medium rounded-xl hover:bg-zinc-800"
+                        >
+                          Primijeni
+                        </button>
+                      </div>
+                      {discountError && <p className="text-xs text-red-500 mt-2">{discountError}</p>}
+                    </div>
+                  )}
                 <div className="border-t border-zinc-200 pt-4 flex justify-between items-center">
                   <span className="text-lg font-bold text-zinc-900">Ukupno</span>
                   <span className="text-2xl font-extrabold text-indigo-600">{(finalTotalCents / 100).toFixed(2)} €</span>

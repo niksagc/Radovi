@@ -104,6 +104,52 @@ export async function register(formData: FormData) {
     console.error('Signup error message:', error.message);
     return { error: `Greška pri registraciji: ${error.message}` };
   }
+
+  // Automatic discount code generation
+  try {
+    const { data: templates } = await supabase
+      .from('discount_templates')
+      .select('*')
+      .eq('is_active', true);
+
+    if (templates && templates.length > 0) {
+      const { sendEmail } = await import('@/lib/email');
+      const crypto = await import('crypto');
+
+      for (const template of templates) {
+        const code = crypto.randomBytes(4).toString('hex').toUpperCase();
+        const expiresAtDate = template.expires_at ? new Date(template.expires_at) : new Date(Date.now() + 60 * 24 * 60 * 60 * 1000);
+
+        await supabase
+          .from('user_discounts')
+          .insert([{
+            user_id: data.user!.id,
+            code,
+            value: template.value,
+            expires_at: expiresAtDate.toISOString(),
+          }]);
+
+        await sendEmail({
+          to: email,
+          subject: 'Dobrodošli u StudyWorks - Vaš popust',
+          html: `
+            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 8px;">
+              <h2 style="color: #4f46e5;">Dobrodošli u StudyWorks!</h2>
+              <p>Poštovani,</p>
+              <p>Hvala vam na registraciji. Kao znak dobrodošlice, pripremili smo vam popust od ${template.value}%.</p>
+              <div style="background: #f9fafb; padding: 15px; border-radius: 8px; margin: 20px 0; text-align: center; font-size: 24px; font-weight: bold; color: #1f2937;">
+                ${code}
+              </div>
+              <p>Kod vrijedi do: <strong>${expiresAtDate.toLocaleDateString('hr-HR')}</strong>.</p>
+              <p>Srdačan pozdrav,<br/>StudyWorks Tim</p>
+            </div>
+          `,
+        });
+      }
+    }
+  } catch (err) {
+    console.error('Error generating automatic discount:', err);
+  }
   
   console.log('Signup successful, redirecting to dashboard');
   redirect('/dashboard');
