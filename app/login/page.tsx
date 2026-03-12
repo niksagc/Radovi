@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useActionState } from 'react';
-import { login, sendMagicLink } from './actions';
+import { login } from './actions';
 import Link from 'next/link';
 import { motion } from 'motion/react';
 import Logo from '@/components/Logo';
