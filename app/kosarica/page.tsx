@@ -13,6 +13,7 @@ export default function CartPage() {
   const [mounted, setMounted] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [discounts, setDiscounts] = useState<any[]>([]);
+  const [disabledDiscounts, setDisabledDiscounts] = useState<string[]>([]);
   const router = useRouter();
   const supabase = createClient();
 
@@ -44,23 +45,21 @@ export default function CartPage() {
   const totalCents = subtotalCents + addonsTotalCents;
 
   // Apply discounts
-  let discountAmountCents = 0;
+  const appliedDiscounts = [];
   
   // 1. Bulk items discount (2+ items)
   const bulkDiscount = discounts.find(d => d.type === 'bulk_items');
-  if (bulkDiscount && items.length >= 2) {
-    discountAmountCents += Math.round(totalCents * (bulkDiscount.value / 100));
+  if (bulkDiscount && items.length >= 2 && !disabledDiscounts.includes(bulkDiscount.id)) {
+    appliedDiscounts.push(bulkDiscount);
   }
 
   // 2. First order discount (if user is logged in and it's their first order)
-  // This is a simplified check, assuming we can check orders count
   const firstOrderDiscount = discounts.find(d => d.type === 'first_order');
-  if (firstOrderDiscount && user) {
-    // In a real app, we would check if user has any completed orders.
-    // For now, we'll skip the check and assume it applies if the discount exists.
-    discountAmountCents += Math.round(totalCents * (firstOrderDiscount.value / 100));
+  if (firstOrderDiscount && user && !disabledDiscounts.includes(firstOrderDiscount.id)) {
+    appliedDiscounts.push(firstOrderDiscount);
   }
 
+  const discountAmountCents = appliedDiscounts.reduce((sum, d) => sum + Math.round(totalCents * (d.value / 100)), 0);
   const finalTotalCents = Math.max(0, totalCents - discountAmountCents);
 
   const handleCheckout = () => {
@@ -179,12 +178,20 @@ export default function CartPage() {
                     <span>{(addonsTotalCents / 100).toFixed(2)} €</span>
                   </div>
                 )}
-                {discountAmountCents > 0 && (
-                  <div className="flex justify-between text-emerald-600 font-medium">
-                    <span>Popust</span>
-                    <span>-{(discountAmountCents / 100).toFixed(2)} €</span>
-                  </div>
-                )}
+                  {appliedDiscounts.map((d: any) => (
+                    <div key={d.id} className="flex justify-between text-emerald-600 font-medium">
+                      <span>
+                        Popust: {d.name} 
+                        <button 
+                          onClick={() => setDisabledDiscounts([...disabledDiscounts, d.id])} 
+                          className="text-xs text-red-500 underline ml-2 hover:text-red-700"
+                        >
+                          Ukloni
+                        </button>
+                      </span>
+                      <span>-{(Math.round(totalCents * (d.value / 100)) / 100).toFixed(2)} €</span>
+                    </div>
+                  ))}
                 <div className="border-t border-zinc-200 pt-4 flex justify-between items-center">
                   <span className="text-lg font-bold text-zinc-900">Ukupno</span>
                   <span className="text-2xl font-extrabold text-indigo-600">{(finalTotalCents / 100).toFixed(2)} €</span>
