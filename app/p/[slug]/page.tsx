@@ -1,6 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
-import ReactMarkdown from 'react-markdown';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import { logout } from '@/app/login/actions';
@@ -109,8 +108,52 @@ StudyWorks je nastao iz ideje da se učenicima i studentima pruži praktična po
             {pageToDisplay.title}
           </h1>
           
-          <div className="prose prose-zinc prose-indigo max-w-none">
-            <ReactMarkdown>{pageToDisplay.content}</ReactMarkdown>
+          <div className="space-y-8 text-zinc-800">
+            <p className="leading-relaxed text-lg">
+              StudyWorks je platforma koja pomaže učenicima i studentima u izradi školskih i akademskih radova. Naš cilj je olakšati proces pisanja, istraživanja i organizacije sadržaja kako bi korisnici mogli dobiti kvalitetan, strukturiran i pregledan rad.
+            </p>
+
+            <p className="leading-relaxed text-lg">
+              Razumijemo da pisanje seminarskih, završnih ili drugih školskih radova često može biti zahtjevno i vremenski ograničeno. Zato smo pokrenuli StudyWorks – mjesto gdje se može dobiti pomoć u pripremi različitih vrsta radova.
+            </p>
+
+            <section className="space-y-4 mt-6">
+              <h2 className="text-3xl font-bold text-zinc-900">Što radimo</h2>
+              <p className="leading-relaxed text-lg">
+                StudyWorks pruža pomoć pri izradi različitih vrsta sadržaja, uključujući:
+              </p>
+              <ul className="list-disc list-inside space-y-3 ml-2 text-lg">
+                <li>završne radove</li>
+                <li>seminarske radove</li>
+                <li>učeničke projekte i prezentacije</li>
+                <li>životopise (CV) i motivacijska pisma</li>
+                <li>strukturiranje i organizaciju teksta</li>
+                <li>pomoć pri istraživanju tema</li>
+              </ul>
+              <p className="leading-relaxed text-lg mt-4">
+                Naš fokus je na jasnoći, kvaliteti i prilagodbi sadržaja potrebama korisnika.
+              </p>
+            </section>
+
+            <section className="space-y-4 mt-6">
+              <h2 className="text-3xl font-bold text-zinc-900">Naša misija</h2>
+              <p className="leading-relaxed text-lg">
+                Naša misija je pomoći učenicima i studentima da lakše savladaju školske i akademske izazove, a i da drugim korisnicima olakšamo izradu životopisa za posao i ostalih potrebnih pisanih radova. Vjerujemo da svatko zaslužuje pristup kvalitetnim informacijama i dobro strukturiranim materijalima koji pomažu u učenju i napredovanju.
+              </p>
+            </section>
+
+            <section className="space-y-4 mt-6">
+              <h2 className="text-3xl font-bold text-zinc-900">Zašto StudyWorks</h2>
+              <ul className="list-disc list-inside space-y-3 ml-2 text-lg">
+                <li>jednostavan i brz proces</li>
+                <li>kvalitetno strukturirani sadržaji</li>
+                <li>prilagođeno učenicima i studentima i ostalim korisnicima</li>
+                <li>podrška pri izradi različitih vrsta radova</li>
+              </ul>
+              <p className="leading-relaxed text-lg mt-4">
+                StudyWorks je nastao iz ideje da se učenicima i studentima pruži praktična pomoć u trenucima kada im je to najpotrebnije.
+              </p>
+            </section>
           </div>
         </article>
       </main>
