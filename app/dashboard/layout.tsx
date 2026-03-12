@@ -1,5 +1,5 @@
 import { logout } from '@/app/login/actions';
-import UserHeader from './UserHeader';
+import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { createClient } from '@/lib/supabase/server';
 
@@ -26,7 +26,7 @@ export default async function DashboardLayout({
   return (
     <div className="min-h-screen bg-zinc-50 flex flex-col">
       <div className="sticky top-0 z-50 w-full">
-        <UserHeader logoutAction={logout} role={role} />
+        <Header logoutAction={logout} role={role} />
       </div>
       <main className="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 relative z-0">
         {children}

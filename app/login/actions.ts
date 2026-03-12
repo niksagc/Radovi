@@ -3,41 +3,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 
-export async function sendMagicLink(formData: FormData) {
-  const email = formData.get('email') as string;
-  
-  if (!email) {
-    return { error: 'Molimo unesite email adresu.' };
-  }
-  
-  const supabase = await createClient();
-  
-  // Get the current origin for the redirect URL
-  // In a production app, this would be your domain
-  const origin = process.env.APP_URL || 'http://localhost:3000';
-  
-  const { error } = await supabase.auth.signInWithOtp({
-    email,
-    options: {
-      emailRedirectTo: `${origin}/auth/callback`,
-    },
-  });
-  
-  if (error) {
-    console.error('Magic link error:', error.message);
-    
-    if (error.message.includes('Database error') || error.message.includes('saving new user')) {
-      return { 
-        error: 'Greška u bazi podataka. Molimo otvorite Supabase SQL Editor i pokrenite skriptu iz datoteke /supabase/migrations/9999_drop_triggers.sql kako biste uklonili stare okidače koji blokiraju registraciju.' 
-      };
-    }
-    
-    return { error: `Greška pri slanju maila: ${error.message}` };
-  }
-  
-  return { success: true };
-}
-
 export async function login(formData: FormData) {
   const identifier = formData.get('identifier') as string;
   const password = formData.get('password') as string;

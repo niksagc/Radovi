@@ -1,11 +1,26 @@
 import Link from 'next/link';
 import Footer from '@/components/Footer';
 import Logo from '@/components/Logo';
+import Header from '@/components/Header';
 import { createClient } from '@/lib/supabase/server';
+import { logout } from '@/app/login/actions';
 
 export default async function HomePage() {
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
   
+  let role = undefined;
+  if (user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+    if (profile) {
+      role = profile.role;
+    }
+  }
+
   const { data: hero } = await supabase
     .from('pages')
     .select('*')
@@ -18,27 +33,9 @@ export default async function HomePage() {
 
   return (
     <div className="min-h-screen bg-zinc-50 flex flex-col">
-      {/* ... header ... */}
-      <header className="bg-white border-b border-zinc-200 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center">
-            <Link href="/" className="flex items-center">
-              <Logo />
-            </Link>
-          </div>
-          <div className="flex items-center space-x-4">
-            <Link href="/login" className="text-sm font-medium text-zinc-600 hover:text-zinc-900">
-              Prijava
-            </Link>
-            <Link href="/register" className="text-sm font-medium bg-indigo-600 text-white px-4 py-2 rounded-xl hover:bg-indigo-700 transition-colors">
-              Registracija
-            </Link>
-          </div>
-        </div>
-      </header>
+      <Header logoutAction={logout} role={role} />
 
       <main className="flex-grow flex items-center justify-center px-4 sm:px-6 lg:px-8 py-20">
-        {/* ... main content ... */}
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-zinc-900 mb-6">
             {title.split('akademske radove')[0]}<span className="text-indigo-600">akademske radove</span>{title.split('akademske radove')[1]}

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X, LogOut } from 'lucide-react';
+import { Menu, X, LogOut, Home, LayoutDashboard, Package, MessageSquare, LayoutGrid, Users, FileText, Tag, FileStack, Settings } from 'lucide-react';
 import Logo from '@/components/Logo';
 
 export default function AdminHeader({ logoutAction }: { logoutAction: () => Promise<void> }) {
@@ -11,16 +11,16 @@ export default function AdminHeader({ logoutAction }: { logoutAction: () => Prom
   const pathname = usePathname();
 
   const navigation = [
-    { name: 'Početna', href: '/' },
-    { name: 'Nadzorna ploča', href: '/admin' },
-    { name: 'Narudžbe', href: '/admin/narudzbe' },
-    { name: 'Zatražene ponude', href: '/admin/zatrazeni-upiti' },
-    { name: 'Katalog', href: '/admin/katalog' },
-    { name: 'Korisnici', href: '/admin/korisnici' },
-    { name: 'Stranice', href: '/admin/stranice' },
-    { name: 'Popusti', href: '/admin/popusti' },
-    { name: 'Radovi', href: '/admin/radovi' },
-    { name: 'Postavke', href: '/admin/postavke' },
+    { name: 'Početna', href: '/', icon: <Home size={16} /> },
+    { name: 'Nadzorna ploča', href: '/admin', icon: <LayoutDashboard size={16} /> },
+    { name: 'Narudžbe', href: '/admin/narudzbe', icon: <Package size={16} /> },
+    { name: 'Zatražene ponude', href: '/admin/zatrazeni-upiti', icon: <MessageSquare size={16} /> },
+    { name: 'Katalog', href: '/admin/katalog', icon: <LayoutGrid size={16} /> },
+    { name: 'Korisnici', href: '/admin/korisnici', icon: <Users size={16} /> },
+    { name: 'Stranice', href: '/admin/stranice', icon: <FileText size={16} /> },
+    { name: 'Popusti', href: '/admin/popusti', icon: <Tag size={16} /> },
+    { name: 'Radovi', href: '/admin/radovi', icon: <FileStack size={16} /> },
+    { name: 'Postavke', href: '/admin/postavke', icon: <Settings size={16} /> },
   ];
 
   return (
@@ -35,17 +35,18 @@ export default function AdminHeader({ logoutAction }: { logoutAction: () => Prom
           </Link>
           
           {/* Desktop Navigation */}
-          <nav className="ml-10 hidden md:flex space-x-8">
+          <nav className="ml-10 hidden md:flex space-x-3">
             {navigation.map((item) => (
               <Link
                 key={item.name}
                 href={item.href}
-                className={`text-sm font-medium transition-colors ${
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border transition-all text-sm font-medium ${
                   pathname === item.href 
-                    ? 'text-white' 
-                    : 'text-zinc-400 hover:text-white'
+                    ? 'bg-zinc-800 border-zinc-700 text-white' 
+                    : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-white'
                 }`}
               >
+                {item.icon}
                 {item.name}
               </Link>
             ))}
@@ -82,12 +83,13 @@ export default function AdminHeader({ logoutAction }: { logoutAction: () => Prom
                 key={item.name}
                 href={item.href}
                 onClick={() => setIsOpen(false)}
-                className={`block py-2 px-3 rounded-md text-base font-medium ${
+                className={`flex items-center gap-2 py-2 px-3 rounded-xl border transition-all text-base font-medium ${
                   pathname === item.href
-                    ? 'bg-zinc-800 text-white'
-                    : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'
+                    ? 'bg-zinc-800 border-zinc-700 text-white'
+                    : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-white'
                 }`}
               >
+                {item.icon}
                 {item.name}
               </Link>
             ))}
@@ -95,7 +97,7 @@ export default function AdminHeader({ logoutAction }: { logoutAction: () => Prom
               <form action={logoutAction}>
                 <button 
                   type="submit" 
-                  className="w-full text-left block py-2 px-3 rounded-md text-base font-medium text-red-400 hover:bg-zinc-800 hover:text-red-300 flex items-center gap-2"
+                  className="w-full text-left flex items-center gap-2 py-2 px-3 rounded-xl text-base font-medium text-red-400 hover:bg-zinc-800 hover:text-red-300"
                 >
                   <LogOut size={18} />
                   Odjava
