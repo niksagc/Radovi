@@ -70,7 +70,7 @@ export async function middleware(request: NextRequest) {
 
     const role = profile?.role || 'student';
 
-    if (isAuthRoute || isRootRoute) {
+    if (isAuthRoute) {
       if (role === 'admin') {
         return supabaseResponse;
       }
