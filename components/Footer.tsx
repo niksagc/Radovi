@@ -1,7 +1,19 @@
 import Link from 'next/link';
 import Logo from './Logo';
+import { createClient } from '@/lib/supabase/server';
 
-export default function Footer() {
+export default async function Footer() {
+  const supabase = await createClient();
+  
+  const { data: footer } = await supabase
+    .from('pages')
+    .select('*')
+    .eq('slug', 'footer-content')
+    .eq('is_published', true)
+    .single();
+
+  const footerText = footer?.content || `© ${new Date().getFullYear()} StudyWorks. Sva prava pridržana.`;
+
   return (
     <footer className="bg-white border-t border-zinc-200 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -11,7 +23,7 @@ export default function Footer() {
               <Logo variant="full" className="opacity-80 grayscale hover:grayscale-0 transition-all" />
             </Link>
             <div className="text-zinc-500 text-sm">
-              &copy; {new Date().getFullYear()} StudyWorks. Sva prava pridržana.
+              {footerText}
             </div>
           </div>
           <div className="flex flex-wrap justify-center gap-6">

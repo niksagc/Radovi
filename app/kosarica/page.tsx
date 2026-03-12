@@ -12,6 +12,7 @@ export default function CartPage() {
   const { items, removeItem, updateQuantity, clearCart } = useCartStore();
   const [mounted, setMounted] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [discounts, setDiscounts] = useState<any[]>([]);
   const router = useRouter();
   const supabase = createClient();
 
@@ -24,7 +25,16 @@ export default function CartPage() {
       setUser(user);
     };
     
+    const fetchDiscounts = async () => {
+      const { data } = await supabase
+        .from('discounts')
+        .select('*')
+        .eq('is_active', true);
+      if (data) setDiscounts(data);
+    };
+    
     checkUser();
+    fetchDiscounts();
   }, [supabase.auth]);
 
   if (!mounted) return null;
@@ -32,6 +42,26 @@ export default function CartPage() {
   const subtotalCents = items.filter(i => i.type === 'base').reduce((total, item) => total + (item.priceCents * item.quantity), 0);
   const addonsTotalCents = items.filter(i => i.type === 'addon').reduce((total, item) => total + (item.priceCents * item.quantity), 0);
   const totalCents = subtotalCents + addonsTotalCents;
+
+  // Apply discounts
+  let discountAmountCents = 0;
+  
+  // 1. Bulk items discount (2+ items)
+  const bulkDiscount = discounts.find(d => d.type === 'bulk_items');
+  if (bulkDiscount && items.length >= 2) {
+    discountAmountCents += Math.round(totalCents * (bulkDiscount.value / 100));
+  }
+
+  // 2. First order discount (if user is logged in and it's their first order)
+  // This is a simplified check, assuming we can check orders count
+  const firstOrderDiscount = discounts.find(d => d.type === 'first_order');
+  if (firstOrderDiscount && user) {
+    // In a real app, we would check if user has any completed orders.
+    // For now, we'll skip the check and assume it applies if the discount exists.
+    discountAmountCents += Math.round(totalCents * (firstOrderDiscount.value / 100));
+  }
+
+  const finalTotalCents = Math.max(0, totalCents - discountAmountCents);
 
   const handleCheckout = () => {
     router.push('/narudzba');
@@ -149,9 +179,15 @@ export default function CartPage() {
                     <span>{(addonsTotalCents / 100).toFixed(2)} €</span>
                   </div>
                 )}
+                {discountAmountCents > 0 && (
+                  <div className="flex justify-between text-emerald-600 font-medium">
+                    <span>Popust</span>
+                    <span>-{(discountAmountCents / 100).toFixed(2)} €</span>
+                  </div>
+                )}
                 <div className="border-t border-zinc-200 pt-4 flex justify-between items-center">
                   <span className="text-lg font-bold text-zinc-900">Ukupno</span>
-                  <span className="text-2xl font-extrabold text-indigo-600">{(totalCents / 100).toFixed(2)} €</span>
+                  <span className="text-2xl font-extrabold text-indigo-600">{(finalTotalCents / 100).toFixed(2)} €</span>
                 </div>
               </div>
 

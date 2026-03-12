@@ -1,8 +1,21 @@
 import Link from 'next/link';
 import Footer from '@/components/Footer';
 import Logo from '@/components/Logo';
+import { createClient } from '@/lib/supabase/server';
 
-export default function HomePage() {
+export default async function HomePage() {
+  const supabase = await createClient();
+  
+  const { data: hero } = await supabase
+    .from('pages')
+    .select('*')
+    .eq('slug', 'home-hero')
+    .eq('is_published', true)
+    .single();
+
+  const title = hero?.title || 'Profesionalna pomoć za vaše akademske radove';
+  const description = hero?.content || 'Nudimo usluge lekture, formatiranja i pripreme eseja, seminarskih i završnih radova te prezentacija. Vaš trud zaslužuje savršenu prezentaciju.';
+
   return (
     <div className="min-h-screen bg-zinc-50 flex flex-col">
       {/* ... header ... */}
@@ -28,10 +41,10 @@ export default function HomePage() {
         {/* ... main content ... */}
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-zinc-900 mb-6">
-            Profesionalna pomoć za vaše <span className="text-indigo-600">akademske radove</span>
+            {title.split('akademske radove')[0]}<span className="text-indigo-600">akademske radove</span>{title.split('akademske radove')[1]}
           </h1>
           <p className="text-xl text-zinc-600 mb-10 max-w-2xl mx-auto">
-            Nudimo usluge lekture, formatiranja i pripreme eseja, seminarskih i završnih radova te prezentacija. Vaš trud zaslužuje savršenu prezentaciju.
+            {description}
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link href="/kategorije" className="w-full sm:w-auto px-8 py-4 bg-indigo-600 text-white font-semibold rounded-2xl hover:bg-indigo-700 transition-colors shadow-sm text-lg">

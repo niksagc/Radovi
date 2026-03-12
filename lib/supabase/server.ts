@@ -37,7 +37,7 @@ export async function createClient() {
     } as any;
   }
 
-  return createServerClient(
+  const supabase = createServerClient(
     supabaseUrl,
     supabaseKey,
     {
@@ -64,4 +64,17 @@ export async function createClient() {
       },
     }
   );
+
+  // Wrap getUser to handle errors gracefully
+  const originalGetUser = supabase.auth.getUser.bind(supabase.auth);
+  supabase.auth.getUser = async () => {
+    try {
+      return await originalGetUser();
+    } catch (error) {
+      console.error('Supabase: Error getting user:', error);
+      return { data: { user: null }, error: error as any };
+    }
+  };
+
+  return supabase;
 }

@@ -42,7 +42,14 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  const { data: { user } } = await supabase.auth.getUser();
+  let user = null;
+  try {
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+  } catch (error) {
+    console.error('Middleware: Error getting user:', error);
+    // If refresh token is invalid, user will remain null and we proceed as unauthenticated
+  }
   console.log('Middleware: user found:', !!user, 'path:', request.nextUrl.pathname);
 
   const isAuthRoute = request.nextUrl.pathname.startsWith('/login') || request.nextUrl.pathname.startsWith('/register');

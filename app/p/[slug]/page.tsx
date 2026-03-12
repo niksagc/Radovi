@@ -16,10 +16,25 @@ export default async function PublicPage({ params }: { params: Promise<{ slug: s
     .eq('is_published', true)
     .single();
 
+  let staticPage = null;
   if (!page) {
-    notFound();
+    if (resolvedParams.slug === 'o-nama') {
+      staticPage = {
+        title: 'O nama',
+        content: 'StudyWorks je platforma gdje studenti mogu naručiti pomoć pri uređivanju, formatiranju i pripremi školskih dokumenata kao što su eseji, seminarski radovi, završni radovi i PowerPoint prezentacije. Naš tim stručnjaka stoji vam na raspolaganju kako bi vaše radove učinio kvalitetnijima i profesionalnijima.'
+      };
+    } else if (resolvedParams.slug === 'uvjeti-poslovanja') {
+      staticPage = {
+        title: 'Uvjeti poslovanja',
+        content: 'Ovdje se nalaze uvjeti poslovanja. Korištenjem naše platforme prihvaćate naše uvjete. Narudžbe se mogu otkazati unutar 14 dana. Depozit je nepovratan.'
+      };
+    } else {
+      notFound();
+    }
   }
 
+  const pageToDisplay = page || staticPage;
+  
   const { data: { user } } = await supabase.auth.getUser();
 
   return (
@@ -51,11 +66,11 @@ export default async function PublicPage({ params }: { params: Promise<{ slug: s
       <main className="flex-grow max-w-4xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-12">
         <article className="bg-white p-8 md:p-12 rounded-3xl shadow-sm border border-zinc-200">
           <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-zinc-900 mb-8">
-            {page.title}
+            {pageToDisplay.title}
           </h1>
           
           <div className="prose prose-zinc prose-indigo max-w-none">
-            <ReactMarkdown>{page.content}</ReactMarkdown>
+            <ReactMarkdown>{pageToDisplay.content}</ReactMarkdown>
           </div>
         </article>
       </main>
