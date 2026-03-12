@@ -3,16 +3,32 @@
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
+import { useCartStore } from '@/lib/store/cart';
 
 export default function ProfileSync() {
   const supabase = createClient();
   const router = useRouter();
   const [syncing, setSyncing] = useState(false);
+  const { userId, setUserId, clearCart } = useCartStore();
 
   useEffect(() => {
     const syncProfile = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       
+      if (user) {
+        if (userId !== user.id) {
+          if (userId !== null) {
+            clearCart();
+          }
+          setUserId(user.id);
+        }
+      } else {
+        if (userId !== null) {
+          clearCart();
+          setUserId(null);
+        }
+      }
+
       if (!user) return;
 
       // Check if profile exists
@@ -67,7 +83,7 @@ export default function ProfileSync() {
     };
 
     syncProfile();
-  }, [supabase, router]);
+  }, [supabase, router, userId, setUserId, clearCart]);
 
   if (syncing) {
     return (

@@ -5,11 +5,13 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Menu, X, LogOut, ShoppingCart, Package, LayoutGrid, BookOpen, Share2, Settings, Shield } from 'lucide-react';
 import Logo from '@/components/Logo';
+import { useCartStore } from '@/lib/store/cart';
 
 export default function Header({ logoutAction, role }: { logoutAction?: () => Promise<void>, role?: string }) {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
   const isLoggedIn = !!role;
+  const { clearCart } = useCartStore();
 
   const navigation = [
     { name: 'Moje narudžbe', href: '/dashboard', icon: <Package size={16} /> },
@@ -27,7 +29,7 @@ export default function Header({ logoutAction, role }: { logoutAction?: () => Pr
     <header className="bg-white border-b border-zinc-200 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         <div className="flex items-center">
-          <Link href={isLoggedIn ? "/dashboard" : "/"} className="flex items-center">
+          <Link href="/" className="flex items-center">
             <Logo />
           </Link>
           
@@ -75,7 +77,7 @@ export default function Header({ logoutAction, role }: { logoutAction?: () => Pr
               <div className="hidden md:block">
                 {logoutAction && (
                   <form action={logoutAction}>
-                    <button type="submit" className="text-sm font-medium text-zinc-600 hover:text-zinc-900 flex items-center gap-2">
+                    <button type="submit" onClick={() => clearCart()} className="text-sm font-medium text-zinc-600 hover:text-zinc-900 flex items-center gap-2">
                       <LogOut size={16} />
                       Odjava
                     </button>
@@ -130,6 +132,7 @@ export default function Header({ logoutAction, role }: { logoutAction?: () => Pr
                 <form action={logoutAction}>
                   <button 
                     type="submit" 
+                    onClick={() => clearCart()}
                     className="w-full text-left flex items-center gap-2 py-2 px-3 rounded-xl text-base font-medium text-red-600 hover:bg-red-50"
                   >
                     <LogOut size={18} />

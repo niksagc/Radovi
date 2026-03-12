@@ -15,6 +15,8 @@ export interface CartItem {
 
 interface CartState {
   items: CartItem[];
+  userId: string | null;
+  setUserId: (userId: string | null) => void;
   addItem: (item: Omit<CartItem, 'id'>) => void;
   removeItem: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
@@ -28,6 +30,8 @@ export const useCartStore = create<CartState>()(
   persist(
     (set, get) => ({
       items: [],
+      userId: null,
+      setUserId: (userId) => set({ userId }),
       addItem: (item) => set((state) => {
         // Check if item already exists
         const existingItemIndex = state.items.findIndex(i => i.itemId === item.itemId);
