@@ -27,7 +27,7 @@ export default function Header({ logoutAction, role }: { logoutAction?: () => Pr
 
   return (
     <header className="bg-white border-b border-zinc-200 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         <div className="flex items-center">
           <Link href="/" className="flex items-center">
             <Logo />
@@ -35,7 +35,7 @@ export default function Header({ logoutAction, role }: { logoutAction?: () => Pr
           
           {/* Desktop Navigation */}
           {isLoggedIn && (
-            <nav className="ml-10 hidden md:flex space-x-3">
+            <nav className="ml-10 hidden md:flex space-x-4">
               {navigation.map((item) => (
                 <Link
                   key={item.name}

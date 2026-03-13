@@ -11,7 +11,7 @@ export default function AdminLayout({
       <div className="sticky top-0 z-50 w-full">
         <AdminHeader logoutAction={logout} />
       </div>
-      <main className="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 relative z-0">
+      <main className="flex-grow max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 relative z-0">
         {children}
       </main>
     </div>

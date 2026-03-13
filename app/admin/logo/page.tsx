@@ -118,7 +118,7 @@ export default function LogoPage() {
         <div className="mt-12 p-6 bg-indigo-50 rounded-2xl border border-indigo-100">
           <h3 className="text-sm font-bold text-indigo-900 mb-2 uppercase tracking-wider">Savjet za društvene mreže</h3>
           <p className="text-sm text-indigo-700 leading-relaxed">
-            Za najbolji izgled na društvenim mrežama, koristite kružnu verziju (lijevo). Tekst "StudyWorks" je sada integriran unutar kruga za bolju prepoznatljivost brenda.
+            Za najbolji izgled na društvenim mrežama, koristite kružnu verziju (lijevo). Tekst &quot;StudyWorks&quot; je sada integriran unutar kruga za bolju prepoznatljivost brenda.
           </p>
         </div>
       </div>

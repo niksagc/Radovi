@@ -95,7 +95,7 @@ export default async function AdminDashboardPage() {
         <h1 className="text-3xl font-bold text-zinc-900">Nadzorna ploča</h1>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-zinc-200">
           <h3 className="text-sm font-medium text-zinc-500">Aktivne narudžbe</h3>
           <p className="mt-2 text-3xl font-bold text-zinc-900">

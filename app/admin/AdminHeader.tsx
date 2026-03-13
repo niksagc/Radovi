@@ -26,7 +26,7 @@ export default function AdminHeader({ logoutAction }: { logoutAction: () => Prom
 
   return (
     <header className="bg-zinc-900 border-b border-zinc-800 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         <div className="flex items-center">
           <Link href="/admin" className="flex items-center">
             <Logo color="white" />
@@ -36,7 +36,7 @@ export default function AdminHeader({ logoutAction }: { logoutAction: () => Prom
           </Link>
           
           {/* Desktop Navigation */}
-          <nav className="ml-10 hidden md:flex space-x-3">
+          <nav className="ml-10 hidden md:flex space-x-4">
             {navigation.map((item) => (
               <Link
                 key={item.name}

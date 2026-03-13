@@ -39,7 +39,7 @@ export default async function CategoriesPage() {
         </div>
       ) : (
         <header className="bg-white border-b border-zinc-200 sticky top-0 z-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+          <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <div className="flex items-center">
               <Link href="/" className="text-2xl font-bold text-indigo-600 tracking-tight">
                 StudyWorks
@@ -57,7 +57,7 @@ export default async function CategoriesPage() {
         </header>
       )}
 
-      <main className="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-12 relative z-0">
+      <main className="flex-grow max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8 py-12 relative z-0">
         <h1 className="text-4xl font-extrabold tracking-tight text-zinc-900 mb-8">
           Katalog usluga
         </h1>
