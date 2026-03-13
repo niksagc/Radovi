@@ -95,7 +95,7 @@ export default async function AdminDashboardPage() {
         <h1 className="text-3xl font-bold text-zinc-900">Nadzorna ploča</h1>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-zinc-200">
           <h3 className="text-sm font-medium text-zinc-500">Aktivne narudžbe</h3>
           <p className="mt-2 text-3xl font-bold text-zinc-900">
@@ -118,6 +118,10 @@ export default async function AdminDashboardPage() {
           <h3 className="text-sm font-medium text-zinc-500">Ukupno korisnika</h3>
           <p className="mt-2 text-3xl font-bold text-zinc-900">{totalUsersCount || 0}</p>
         </div>
+        <Link href="/admin/logo" className="bg-white p-6 rounded-2xl shadow-sm border border-zinc-200 hover:border-indigo-300 transition-colors group">
+          <h3 className="text-sm font-medium text-zinc-500 group-hover:text-indigo-600">Logo Generator</h3>
+          <p className="mt-2 text-sm text-zinc-600">Generirajte logo za društvene mreže &rarr;</p>
+        </Link>
       </div>
 
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-zinc-200 mb-8">
