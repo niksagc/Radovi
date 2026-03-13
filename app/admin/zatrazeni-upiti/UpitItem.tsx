@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { Mail, Calendar, User, FileText, CheckCircle, X, Send, Trash2 } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
+import { deleteInquiryAction, markAsRepliedAction } from './actions';
 
 export default function UpitItem({ upit }: { upit: any }) {
   const [loading, setLoading] = useState(false);
@@ -11,18 +11,14 @@ export default function UpitItem({ upit }: { upit: any }) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [replyMessage, setReplyMessage] = useState('');
   const [sendingReply, setSendingReply] = useState(false);
+  const [isDeleted, setIsDeleted] = useState(false);
   const router = useRouter();
-  const supabase = createClient();
 
   const markAsReplied = async () => {
     setLoading(true);
     try {
-      const { error } = await supabase
-        .from('preorder_contacts')
-        .update({ status: 'replied' })
-        .eq('id', upit.id);
-
-      if (error) throw error;
+      const result = await markAsRepliedAction(upit.id);
+      if (!result.success) throw new Error(result.error);
       router.refresh();
     } catch (error) {
       console.error('Error updating status:', error);
@@ -35,22 +31,13 @@ export default function UpitItem({ upit }: { upit: any }) {
   const handleDelete = async () => {
     setLoading(true);
     try {
-      // First delete associated files from storage if any
-      if (upit.files && upit.files.length > 0) {
-        const filePaths = upit.files.map((f: any) => f.path);
-        await supabase.storage.from('preorders').remove(filePaths);
-      }
-
-      // Delete the record (cascade will handle file records in DB)
-      const { error } = await supabase
-        .from('preorder_contacts')
-        .delete()
-        .eq('id', upit.id);
-
-      if (error) throw error;
+      const filePaths = upit.files?.map((f: any) => f.path) || [];
+      const result = await deleteInquiryAction(upit.id, filePaths);
       
+      if (!result.success) throw new Error(result.error);
+      
+      setIsDeleted(true);
       setShowDeleteConfirm(false);
-      router.refresh();
     } catch (error) {
       console.error('Error deleting inquiry:', error);
       alert('Greška pri brisanju upita.');
@@ -96,6 +83,8 @@ export default function UpitItem({ upit }: { upit: any }) {
   };
 
   const encodedSubject = encodeURIComponent(`Ponuda za: ${upit.subject || 'Upit'}`);
+
+  if (isDeleted) return null;
 
   return (
     <>
