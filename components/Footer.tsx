@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Logo from './Logo';
 import { createClient } from '@/lib/supabase/server';
+import { Facebook, Instagram } from 'lucide-react';
 
 export default async function Footer() {
   const supabase = await createClient();
@@ -10,6 +11,11 @@ export default async function Footer() {
     .select('*')
     .eq('slug', 'footer-content')
     .eq('is_published', true)
+    .single();
+
+  const { data: settings } = await supabase
+    .from('app_settings')
+    .select('facebook_url, instagram_url')
     .single();
 
   const footerText = footer?.content || `© ${new Date().getFullYear()} StudyWorks. Sva prava pridržana.`;
@@ -26,11 +32,25 @@ export default async function Footer() {
               {footerText}
             </div>
           </div>
-          <div className="flex flex-wrap justify-center gap-6">
-            <Link href="/p/o-nama" className="text-sm text-zinc-500 hover:text-indigo-600 transition-colors">O nama</Link>
-            <Link href="/p/uvjeti-poslovanja" className="text-sm text-zinc-500 hover:text-indigo-600 transition-colors">Uvjeti poslovanja</Link>
-            <Link href="/p/blog" className="text-sm text-zinc-500 hover:text-indigo-600 transition-colors">Blog</Link>
-            <Link href="/kontakt" className="text-sm text-zinc-500 hover:text-indigo-600 transition-colors">Kontakt</Link>
+          <div className="flex flex-col items-center md:items-end gap-4">
+            <div className="flex flex-wrap justify-center gap-6">
+              <Link href="/p/o-nama" className="text-sm text-zinc-500 hover:text-indigo-600 transition-colors">O nama</Link>
+              <Link href="/p/uvjeti-poslovanja" className="text-sm text-zinc-500 hover:text-indigo-600 transition-colors">Uvjeti poslovanja</Link>
+              <Link href="/p/blog" className="text-sm text-zinc-500 hover:text-indigo-600 transition-colors">Blog</Link>
+              <Link href="/kontakt" className="text-sm text-zinc-500 hover:text-indigo-600 transition-colors">Kontakt</Link>
+            </div>
+            <div className="flex gap-4">
+              {settings?.facebook_url && (
+                <a href={settings.facebook_url} target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-indigo-600 transition-colors">
+                  <Facebook size={20} />
+                </a>
+              )}
+              {settings?.instagram_url && (
+                <a href={settings.instagram_url} target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-indigo-600 transition-colors">
+                  <Instagram size={20} />
+                </a>
+              )}
+            </div>
           </div>
         </div>
       </div>

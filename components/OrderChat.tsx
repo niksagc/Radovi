@@ -65,7 +65,7 @@ export default function OrderChat({ orderId, currentUserId, currentUserRole }: {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [orderId]);
+  }, [orderId, supabase]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

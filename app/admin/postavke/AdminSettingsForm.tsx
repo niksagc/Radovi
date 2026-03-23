@@ -64,6 +64,8 @@ export default function AdminSettingsForm({ initialSettings }: { initialSettings
       iban_recipient: formData.get('iban_recipient') as string,
       iban_number: formData.get('iban_number') as string,
       iban_bank: formData.get('iban_bank') as string,
+      facebook_url: formData.get('facebook_url') as string,
+      instagram_url: formData.get('instagram_url') as string,
       cancellation_days: parseInt(formData.get('cancellation_days') as string, 10),
       final_payment_deadline_hours: parseInt(formData.get('final_payment_deadline_hours') as string, 10) * 24,
     };
@@ -154,6 +156,33 @@ export default function AdminSettingsForm({ initialSettings }: { initialSettings
             <li><strong>FROM_EMAIL</strong>: Vaša Zoho email adresa</li>
           </ul>
           <p className="mt-2 font-medium">Napomena: App Password možete generirati u Zoho postavkama pod &quot;Security&quot; &rarr; &quot;App Passwords&quot;.</p>
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <h3 className="text-sm font-bold text-zinc-900">Društvene mreže</h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-medium text-zinc-500 mb-1">Facebook URL</label>
+            <input
+              type="url"
+              name="facebook_url"
+              defaultValue={initialSettings?.facebook_url}
+              className="w-full rounded-xl border border-zinc-300 px-4 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+              placeholder="https://facebook.com/..."
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-zinc-500 mb-1">Instagram URL</label>
+            <input
+              type="url"
+              name="instagram_url"
+              defaultValue={initialSettings?.instagram_url}
+              className="w-full rounded-xl border border-zinc-300 px-4 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+              placeholder="https://instagram.com/..."
+            />
+          </div>
         </div>
       </div>
 

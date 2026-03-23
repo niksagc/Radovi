@@ -40,7 +40,7 @@ export default function CartPage() {
     };
     
     checkUser();
-  }, [supabase.auth]);
+  }, [supabase]);
 
   useEffect(() => {
     localStorage.setItem('appliedDiscount', JSON.stringify(appliedDiscount));
