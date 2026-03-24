@@ -1,17 +1,30 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X, LogOut, ShoppingCart, Package, LayoutGrid, BookOpen, Share2, Settings, Shield } from 'lucide-react';
+import { Menu, X, LogOut, ShoppingCart, Package, LayoutGrid, BookOpen, Share2, Settings, Shield, Facebook, Instagram } from 'lucide-react';
 import Logo from '@/components/Logo';
 import { useCartStore } from '@/lib/store/cart';
+import { createClient } from '@/lib/supabase/client';
 
 export default function Header({ logoutAction, role }: { logoutAction?: () => Promise<void>, role?: string }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [appSettings, setAppSettings] = useState<any>(null);
   const pathname = usePathname();
   const isLoggedIn = !!role;
   const { clearCart } = useCartStore();
+  const supabase = createClient();
+
+  useEffect(() => {
+    const fetchAppSettings = async () => {
+      const { data, error } = await supabase.from('app_settings').select('*').single();
+      if (!error && data) {
+        setAppSettings(data);
+      }
+    };
+    fetchAppSettings();
+  }, [supabase]);
 
   const navigation = [
     { name: 'Moje narudžbe', href: '/dashboard', icon: <Package size={16} /> },
@@ -34,24 +47,36 @@ export default function Header({ logoutAction, role }: { logoutAction?: () => Pr
           </Link>
           
           {/* Desktop Navigation */}
-          {isLoggedIn && (
-            <nav className="ml-10 hidden md:flex space-x-4">
-              {navigation.map((item) => (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border transition-all text-sm font-medium ${
-                    pathname === item.href 
-                      ? 'bg-indigo-50 border-indigo-200 text-indigo-700' 
-                      : 'bg-white border-zinc-200 text-zinc-600 hover:border-indigo-200 hover:bg-zinc-50'
-                  }`}
-                >
-                  {item.icon}
-                  {item.name}
-                </Link>
-              ))}
-            </nav>
-          )}
+          <nav className="ml-10 hidden md:flex space-x-4">
+            {isLoggedIn && navigation.map((item) => (
+              <Link
+                key={item.name}
+                href={item.href}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border transition-all text-sm font-medium ${
+                  pathname === item.href 
+                    ? 'bg-indigo-50 border-indigo-200 text-indigo-700' 
+                    : 'bg-white border-zinc-200 text-zinc-600 hover:border-indigo-200 hover:bg-zinc-50'
+                }`}
+              >
+                {item.icon}
+                {item.name}
+              </Link>
+            ))}
+            {role !== 'admin' && appSettings && (
+              <>
+                {appSettings.facebook_url && (
+                  <Link href={appSettings.facebook_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-zinc-200 bg-white text-sm font-medium text-zinc-600 hover:border-indigo-200 hover:bg-zinc-50 transition-all">
+                    <Facebook size={16} />
+                  </Link>
+                )}
+                {appSettings.instagram_url && (
+                  <Link href={appSettings.instagram_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-zinc-200 bg-white text-sm font-medium text-zinc-600 hover:border-indigo-200 hover:bg-zinc-50 transition-all">
+                    <Instagram size={16} />
+                  </Link>
+                )}
+              </>
+            )}
+          </nav>
         </div>
 
         <div className="flex items-center space-x-4">
@@ -87,6 +112,13 @@ export default function Header({ logoutAction, role }: { logoutAction?: () => Pr
             </>
           ) : (
             <>
+              {/* Mobile Menu Button for Public Users */}
+              <button
+                onClick={() => setIsOpen(!isOpen)}
+                className="md:hidden p-2 text-zinc-500 hover:text-zinc-900 rounded-md"
+              >
+                {isOpen ? <X size={24} /> : <Menu size={24} />}
+              </button>
               <Link href="/login" className="text-sm font-medium text-zinc-600 hover:text-zinc-900">
                 Prijava
               </Link>
@@ -99,10 +131,10 @@ export default function Header({ logoutAction, role }: { logoutAction?: () => Pr
       </div>
 
       {/* Mobile Navigation */}
-      {isLoggedIn && isOpen && (
+      {isOpen && (
         <div className="md:hidden bg-white border-b border-zinc-200 pb-4 px-4 shadow-lg">
           <nav className="flex flex-col space-y-2 mt-2">
-            {navigation.map((item) => (
+            {isLoggedIn && navigation.map((item) => (
               <Link
                 key={item.name}
                 href={item.href}
@@ -118,17 +150,36 @@ export default function Header({ logoutAction, role }: { logoutAction?: () => Pr
               </Link>
             ))}
             
-            <Link
-              href="/kosarica"
-              onClick={() => setIsOpen(false)}
-              className="flex items-center gap-2 py-2 px-3 rounded-xl border border-zinc-200 bg-white text-base font-medium text-zinc-600 hover:border-indigo-200 hover:bg-zinc-50 transition-all"
-            >
-              <ShoppingCart size={18} />
-              Košarica
-            </Link>
+            {isLoggedIn && (
+              <Link
+                href="/kosarica"
+                onClick={() => setIsOpen(false)}
+                className="flex items-center gap-2 py-2 px-3 rounded-xl border border-zinc-200 bg-white text-base font-medium text-zinc-600 hover:border-indigo-200 hover:bg-zinc-50 transition-all"
+              >
+                <ShoppingCart size={18} />
+                Košarica
+              </Link>
+            )}
 
-            <div className="pt-4 mt-4 border-t border-zinc-200">
-              {logoutAction && (
+            {role !== 'admin' && appSettings && (
+              <>
+                {appSettings.facebook_url && (
+                  <Link href={appSettings.facebook_url} target="_blank" rel="noopener noreferrer" onClick={() => setIsOpen(false)} className="flex items-center gap-2 py-2 px-3 rounded-xl border border-zinc-200 bg-white text-base font-medium text-zinc-600 hover:border-indigo-200 hover:bg-zinc-50 transition-all">
+                    <Facebook size={18} />
+                    Facebook
+                  </Link>
+                )}
+                {appSettings.instagram_url && (
+                  <Link href={appSettings.instagram_url} target="_blank" rel="noopener noreferrer" onClick={() => setIsOpen(false)} className="flex items-center gap-2 py-2 px-3 rounded-xl border border-zinc-200 bg-white text-base font-medium text-zinc-600 hover:border-indigo-200 hover:bg-zinc-50 transition-all">
+                    <Instagram size={18} />
+                    Instagram
+                  </Link>
+                )}
+              </>
+            )}
+
+            {isLoggedIn && logoutAction && (
+              <div className="pt-4 mt-4 border-t border-zinc-200">
                 <form action={logoutAction}>
                   <button 
                     type="submit" 
@@ -139,8 +190,8 @@ export default function Header({ logoutAction, role }: { logoutAction?: () => Pr
                     Odjava
                   </button>
                 </form>
-              )}
-            </div>
+              </div>
+            )}
           </nav>
         </div>
       )}
