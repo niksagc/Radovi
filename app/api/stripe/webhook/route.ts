@@ -25,6 +25,8 @@ export async function POST(request: Request) {
 
   const supabase = createAdminClient();
 
+  console.log('Webhook event type:', event.type);
+
   if (event.type === 'payment_intent.succeeded') {
     const paymentIntent = event.data.object as Stripe.PaymentIntent;
     
@@ -37,6 +39,7 @@ export async function POST(request: Request) {
       .single();
 
     if (payment) {
+      console.log('Payment updated, processing order status update for order:', payment.order_id, 'Stage:', payment.stage);
       // Update order status
       const { data: order } = await supabase
         .from('orders')
@@ -45,6 +48,7 @@ export async function POST(request: Request) {
         .single();
 
       if (order) {
+        console.log('Order found, current status:', order.status);
         let newStatus = order.status;
         if (payment.stage === 'deposit') {
           newStatus = 'Uplaćen depozit - U izradi';
@@ -56,8 +60,13 @@ export async function POST(request: Request) {
           await supabase.from('files').update({ is_locked: false }).eq('order_id', order.id);
         }
 
+        console.log('Updating order status to:', newStatus);
         await supabase.from('orders').update({ status: newStatus }).eq('id', order.id);
+      } else {
+        console.error('Order not found for payment:', payment.id);
       }
+    } else {
+      console.error('Payment record not found for payment intent:', paymentIntent.id);
     }
   } else if (event.type === 'payment_intent.payment_failed') {
     const paymentIntent = event.data.object as Stripe.PaymentIntent;

@@ -67,7 +67,7 @@ export async function GET(request: Request) {
   const supabaseAdmin = createAdminClient();
   const { data, error: signedUrlError } = await supabaseAdmin.storage
     .from(bucket)
-    .createSignedUrl(filePath, 60, { download: filename });
+    .createSignedUrl(filePath, 60);
 
   if (signedUrlError || !data) {
     return NextResponse.json({ error: 'Could not generate download link' }, { status: 500 });
