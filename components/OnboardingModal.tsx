@@ -57,7 +57,7 @@ const steps = [
           </ul>
         </div>
         <p className="text-sm">
-          Plaćanje se vrši direktno na IBAN račun ili karticama (Stripe).
+          Plaćanje se vrši direktno na IBAN račun ili karticama (Stripe). Prilikom odabira kartičnog plaćanja, na osnovni iznos narudžbe primjenjuje se naknada za obradu transakcije u iznosu od 2.9% + 0.30€.
         </p>
       </div>
     ),
