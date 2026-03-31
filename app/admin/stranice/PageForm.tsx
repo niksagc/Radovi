@@ -1,8 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import dynamic from 'next/dynamic';
+import 'easymde/dist/easymde.min.css';
+
+const SimpleMDE = dynamic(() => import('react-simplemde-editor'), { ssr: false });
 
 export default function PageForm({ initialData }: { initialData?: any }) {
   const [loading, setLoading] = useState(false);
@@ -73,6 +77,11 @@ export default function PageForm({ initialData }: { initialData?: any }) {
     }
   };
 
+  const mdeOptions = useMemo(() => ({
+    spellChecker: false,
+    maxHeight: '400px',
+  }), []);
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-4xl">
       {error && (
@@ -111,14 +120,11 @@ export default function PageForm({ initialData }: { initialData?: any }) {
 
         <div>
           <label className="block text-sm font-medium text-zinc-700 mb-1">Sadržaj (Markdown podržan)</label>
-          <textarea
-            required
-            rows={15}
+          <SimpleMDE
             value={formData.content}
-            onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-            className="w-full rounded-xl border border-zinc-300 px-4 py-2 focus:ring-indigo-500 focus:border-indigo-500 font-mono text-sm"
-            placeholder="Unesite sadržaj stranice..."
-          ></textarea>
+            onChange={(value) => setFormData({ ...formData, content: value })}
+            options={mdeOptions}
+          />
         </div>
 
         <div className="flex items-center gap-2">
