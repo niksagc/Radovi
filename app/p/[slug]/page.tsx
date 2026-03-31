@@ -53,7 +53,11 @@ StudyWorks je nastao iz ideje da se učenicima i studentima pruži praktična po
     } else if (resolvedParams.slug === 'uvjeti-poslovanja') {
       staticPage = {
         title: 'Uvjeti poslovanja',
-        content: 'Ovdje se nalaze uvjeti poslovanja. Korištenjem naše platforme prihvaćate naše uvjete. Narudžbe se mogu otkazati unutar 14 dana. Depozit je nepovratan.'
+        content: `Ovdje se nalaze uvjeti poslovanja. Korištenjem naše platforme prihvaćate naše uvjete. Narudžbe se mogu otkazati unutar 14 dana. Depozit je nepovratan.
+
+### Naknada za kartično plaćanje
+
+Prilikom odabira kartičnog plaćanja putem Stripe servisa, na osnovni iznos narudžbe primjenjuje se naknada za obradu transakcije u iznosu od 2.9% + 0.30€. Ova naknada pokriva troškove procesiranja plaćanja i automatski se dodaje na osnovni iznos prilikom plaćanja.`
       };
     } else {
       notFound();

@@ -58,6 +58,7 @@ export default function PaymentOptions({ order: initialOrder, appSettings }: { o
   const [paymentModel, setPaymentModel] = useState<'100%' | '50-50'>(initialOrder.payment_model);
   const [method, setMethod] = useState<'card' | 'iban'>('card');
   const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [amounts, setAmounts] = useState<{ base: number, total: number } | null>(null);
   const [loadingSecret, setLoadingSecret] = useState(false);
   const [ibanProof, setIbanProof] = useState<File | null>(null);
   const [ibanLoading, setIbanLoading] = useState(false);
@@ -69,7 +70,8 @@ export default function PaymentOptions({ order: initialOrder, appSettings }: { o
 
   const updateOrderModel = async (model: '100%' | '50-50') => {
     setPaymentModel(model);
-    setClientSecret(null); // Reset client secret if model changes
+    setClientSecret(null);
+    setAmounts(null);
     
     const depositCents = model === '50-50' ? Math.floor(order.total_cents / 2) : order.total_cents;
     const finalCents = order.total_cents - depositCents;
@@ -109,6 +111,7 @@ export default function PaymentOptions({ order: initialOrder, appSettings }: { o
       const data = await res.json();
       if (data.clientSecret) {
         setClientSecret(data.clientSecret);
+        setAmounts({ base: data.baseAmount, total: data.amountToPay });
       } else if (data.error) {
         setIbanError(`Greška kod kartičnog plaćanja: ${data.error}`);
       }
@@ -256,6 +259,22 @@ export default function PaymentOptions({ order: initialOrder, appSettings }: { o
             </button>
           )}
           {loadingSecret && <p className="text-center text-zinc-500">Učitavanje...</p>}
+          {clientSecret && amounts && (
+            <div className="mb-6 bg-indigo-50 border border-indigo-100 p-4 rounded-xl text-sm text-indigo-900">
+              <div className="flex justify-between mb-1">
+                <span>Osnovni iznos:</span>
+                <span>{(amounts.base / 100).toFixed(2)} €</span>
+              </div>
+              <div className="flex justify-between mb-1">
+                <span>Stripe naknada (2.9% + 0.30€):</span>
+                <span>{((amounts.total - amounts.base) / 100).toFixed(2)} €</span>
+              </div>
+              <div className="flex justify-between font-bold pt-2 border-t border-indigo-200">
+                <span>Ukupno za platiti:</span>
+                <span>{(amounts.total / 100).toFixed(2)} €</span>
+              </div>
+            </div>
+          )}
           {clientSecret && (
             <Elements 
               options={{ 
@@ -264,7 +283,7 @@ export default function PaymentOptions({ order: initialOrder, appSettings }: { o
               }} 
               stripe={stripePromise}
             >
-              <CheckoutForm clientSecret={clientSecret} orderId={order.id} amount={amountToPay} />
+              <CheckoutForm clientSecret={clientSecret} orderId={order.id} amount={amounts?.total || amountToPay} />
             </Elements>
           )}
         </div>

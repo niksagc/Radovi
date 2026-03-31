@@ -103,6 +103,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       clientSecret: paymentIntent.client_secret,
+      baseAmount,
+      amountToPay,
     });
   } catch (err: any) {
     console.error('Stripe error:', err);
