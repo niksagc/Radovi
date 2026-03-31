@@ -61,6 +61,9 @@ export default function AIAssistant() {
         StudyWorks je platforma gdje studenti mogu naručiti pomoć pri uređivanju, formatiranju i pripremi školskih dokumenata (eseji, seminari, završni radovi, PPT prezentacije).
         Odgovaraj na hrvatskom jeziku. Budi pristojan, profesionalan i kratak.
         
+        Važna informacija o plaćanju:
+        Prilikom odabira kartičnog plaćanja putem Stripe servisa, na osnovni iznos narudžbe primjenjuje se naknada za obradu transakcije u iznosu od 2.9% + 0.30€. Ova naknada pokriva troškove procesiranja plaćanja i automatski se dodaje na osnovni iznos prilikom plaćanja. Bankovna uplata (IBAN) nema dodatnih naknada.
+        
         Povijest razgovora:
         ${history}
         
