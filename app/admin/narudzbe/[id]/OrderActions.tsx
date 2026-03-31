@@ -122,7 +122,7 @@ export default function OrderActions({ order }: { order: any }) {
     }
   };
 
-  const pendingIbanPayments = order.payments?.filter((p: any) => p.method === 'iban' && p.status === 'pending');
+  const allIbanPayments = order.payments?.filter((p: any) => p.method === 'iban');
 
   return (
     <div className="space-y-8">
@@ -153,12 +153,12 @@ export default function OrderActions({ order }: { order: any }) {
         </div>
       </div>
 
-      {pendingIbanPayments && pendingIbanPayments.length > 0 && (
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-zinc-200 border-l-4 border-l-yellow-400">
-          <h2 className="text-xl font-bold text-zinc-900 mb-4">Potvrda IBAN uplate</h2>
+      {allIbanPayments && allIbanPayments.length > 0 && (
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-zinc-200">
+          <h2 className="text-xl font-bold text-zinc-900 mb-4">IBAN uplate</h2>
           
-          {pendingIbanPayments.map((payment: any) => (
-            <div key={payment.id} className="mb-4 p-4 bg-zinc-50 rounded-xl border border-zinc-200">
+          {allIbanPayments.map((payment: any) => (
+            <div key={payment.id} className={`mb-4 p-4 rounded-xl border ${payment.status === 'pending' ? 'bg-yellow-50 border-yellow-200' : 'bg-zinc-50 border-zinc-200'}`}>
               <div className="flex justify-between mb-2">
                 <span className="text-sm font-medium text-zinc-700">Iznos:</span>
                 <span className="text-sm font-bold text-zinc-900">{(payment.amount_cents / 100).toFixed(2)} €</span>
@@ -166,6 +166,12 @@ export default function OrderActions({ order }: { order: any }) {
               <div className="flex justify-between mb-4">
                 <span className="text-sm font-medium text-zinc-700">Faza:</span>
                 <span className="text-sm text-zinc-900">{payment.stage === 'deposit' ? 'Depozit (50%)' : payment.stage === 'full' ? 'Cijeli iznos (100%)' : 'Ostatak (50%)'}</span>
+              </div>
+              <div className="flex justify-between mb-4">
+                <span className="text-sm font-medium text-zinc-700">Status:</span>
+                <span className={`text-sm font-bold ${payment.status === 'succeeded' ? 'text-green-600' : 'text-yellow-600'}`}>
+                  {payment.status === 'succeeded' ? 'Potvrđeno' : 'Čeka potvrdu'}
+                </span>
               </div>
               
               {payment.iban_proof_url && (
@@ -179,12 +185,14 @@ export default function OrderActions({ order }: { order: any }) {
                 </a>
               )}
               
-              <button
-                onClick={() => confirmIbanPayment(payment.id)}
-                className="w-full py-2 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 transition-colors text-sm"
-              >
-                Potvrdi uplatu
-              </button>
+              {payment.status === 'pending' && (
+                <button
+                  onClick={() => confirmIbanPayment(payment.id)}
+                  className="w-full py-2 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 transition-colors text-sm"
+                >
+                  Potvrdi uplatu
+                </button>
+              )}
             </div>
           ))}
         </div>
