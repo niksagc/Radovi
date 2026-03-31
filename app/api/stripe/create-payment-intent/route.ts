@@ -18,9 +18,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Narudžba nije pronađena.' }, { status: 404 });
     }
 
-    const amountToPay = order.payment_model === '50-50' ? order.deposit_cents : order.total_cents;
+    const baseAmount = order.payment_model === '50-50' ? order.deposit_cents : order.total_cents;
 
-    console.log('Creating PaymentIntent for order:', orderId, 'Amount:', amountToPay);
+    // Stripe fee calculation: 2.9% + 0.30€ (30 cents)
+    // Formula: (baseAmount + 30) / (1 - 0.029)
+    const feePercentage = 0.029;
+    const feeFixed = 30; // 0.30€ in cents
+    const amountToPay = Math.ceil((baseAmount + feeFixed) / (1 - feePercentage));
+
+    console.log('Creating PaymentIntent for order:', orderId, 'Base Amount:', baseAmount, 'Amount with Fee:', amountToPay);
     console.log('Order student_id:', order.student_id);
 
     // Get user profile to check for stripe_customer_id
