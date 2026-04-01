@@ -8,6 +8,10 @@ export default function PortfolioPage() {
   const [loading, setLoading] = useState(true);
   const supabase = createClient();
 
+  const fileNameMap: { [key: string]: string } = {
+    '0.40617449468938194.docx': 'ZAVRŠNI RAD - Dioklecijanova palača kao turistički brand grada Splita',
+  };
+
   useEffect(() => {
     async function fetchFiles() {
       setLoading(true);
@@ -31,9 +35,10 @@ export default function PortfolioPage() {
         <ul className="space-y-2">
           {files.map((file) => {
             const { data } = supabase.storage.from('portfolio').getPublicUrl(file.name);
+            const displayName = fileNameMap[file.name] || file.name;
             return (
               <li key={file.id} className="border p-4 rounded shadow">
-                <p className="font-semibold">{file.name}</p>
+                <p className="font-semibold">{displayName}</p>
                 <a 
                   href={data.publicUrl} 
                   target="_blank" 

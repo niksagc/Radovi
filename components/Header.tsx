@@ -30,6 +30,7 @@ export default function Header({ logoutAction, role }: { logoutAction?: () => Pr
     { name: 'Moje narudžbe', href: '/dashboard', icon: <Package size={16} /> },
     { name: 'Katalog usluga', href: '/kategorije', icon: <LayoutGrid size={16} /> },
     { name: 'Blog', href: '/p/blog', icon: <BookOpen size={16} /> },
+    { name: 'Portfolio', href: '/portfolio', icon: <BookOpen size={16} /> },
     { name: 'Preporuči i zaradi', href: '/dashboard/preporuke', icon: <Share2 size={16} /> },
     { name: 'Postavke profila', href: '/dashboard/postavke', icon: <Settings size={16} /> },
   ];
