@@ -32,21 +32,34 @@ export default function PortfolioPage() {
       {loading ? (
         <p>Učitavanje...</p>
       ) : (
-        <ul className="space-y-2">
+        <ul className="space-y-4">
           {files.map((file) => {
             const { data } = supabase.storage.from('portfolio').getPublicUrl(file.name);
             const displayName = fileNameMap[file.name] || file.name;
+            const isPdf = file.name.toLowerCase().endsWith('.pdf');
+            
             return (
-              <li key={file.id} className="border p-4 rounded shadow">
+              <li key={file.id} className="border p-4 rounded shadow flex items-center justify-between">
                 <p className="font-semibold">{displayName}</p>
-                <a 
-                  href={data.publicUrl} 
-                  target="_blank" 
-                  rel="noreferrer" 
-                  className="text-blue-500 hover:underline"
-                >
-                  Preuzmi/Pregledaj
-                </a>
+                <div className="flex gap-2">
+                  <a 
+                    href={data.publicUrl} 
+                    download
+                    className="px-3 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-sm"
+                  >
+                    Preuzmi
+                  </a>
+                  {isPdf && (
+                    <a 
+                      href={data.publicUrl} 
+                      target="_blank" 
+                      rel="noreferrer" 
+                      className="px-3 py-1 bg-zinc-200 text-zinc-800 rounded hover:bg-zinc-300 text-sm"
+                    >
+                      Pregledaj
+                    </a>
+                  )}
+                </div>
               </li>
             );
           })}
