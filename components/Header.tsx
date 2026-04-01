@@ -49,7 +49,7 @@ export default function Header({ logoutAction, role }: { logoutAction?: () => Pr
           
           {/* Desktop Navigation */}
           <nav className="ml-10 hidden md:flex space-x-4">
-            {isLoggedIn && navigation.map((item) => (
+            {navigation.map((item) => (
               <Link
                 key={item.name}
                 href={item.href}

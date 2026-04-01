@@ -37,6 +37,8 @@ export default function PortfolioPage() {
             const { data } = supabase.storage.from('portfolio').getPublicUrl(file.name);
             const displayName = fileNameMap[file.name] || file.name;
             const isPdf = file.name.toLowerCase().endsWith('.pdf');
+            const extension = file.name.substring(file.name.lastIndexOf('.'));
+            const downloadName = fileNameMap[file.name] ? `${fileNameMap[file.name]}${extension}` : file.name;
             
             return (
               <li key={file.id} className="border p-4 rounded shadow flex items-center justify-between">
@@ -44,7 +46,7 @@ export default function PortfolioPage() {
                 <div className="flex gap-2">
                   <a 
                     href={data.publicUrl} 
-                    download
+                    download={downloadName}
                     className="px-3 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-sm"
                   >
                     Preuzmi
