@@ -26,6 +26,25 @@ export default function PortfolioPage() {
     fetchFiles();
   }, [supabase]);
 
+  const handleDownload = async (url: string, filename: string) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error('Download failed:', error);
+      // Fallback to opening in new tab if download fails
+      window.open(url, '_blank');
+    }
+  };
+
   return (
     <div className="p-8">
       <h1 className="text-2xl font-bold mb-4">Portfolio Radovi</h1>
@@ -44,13 +63,12 @@ export default function PortfolioPage() {
               <li key={file.id} className="border p-4 rounded shadow flex items-center justify-between">
                 <p className="font-semibold">{displayName}</p>
                 <div className="flex gap-2">
-                  <a 
-                    href={data.publicUrl} 
-                    download={downloadName}
+                  <button 
+                    onClick={() => handleDownload(data.publicUrl, downloadName)}
                     className="px-3 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-sm"
                   >
                     Preuzmi
-                  </a>
+                  </button>
                   {isPdf && (
                     <a 
                       href={data.publicUrl} 
