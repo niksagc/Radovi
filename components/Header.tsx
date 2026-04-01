@@ -26,7 +26,14 @@ export default function Header({ logoutAction, role }: { logoutAction?: () => Pr
     fetchAppSettings();
   }, [supabase]);
 
-  const navigation = [
+  const publicNavigation = [
+    { name: 'Blog', href: '/p/blog', icon: <BookOpen size={16} /> },
+    { name: 'Portfolio', href: '/portfolio', icon: <BookOpen size={16} /> },
+    { name: 'O meni', href: '/o-meni', icon: <BookOpen size={16} /> },
+    { name: 'Kontakt', href: '/kontakt', icon: <BookOpen size={16} /> },
+  ];
+
+  const privateNavigation = [
     { name: 'Moje narudžbe', href: '/dashboard', icon: <Package size={16} /> },
     { name: 'Katalog usluga', href: '/kategorije', icon: <LayoutGrid size={16} /> },
     { name: 'Blog', href: '/p/blog', icon: <BookOpen size={16} /> },
@@ -34,6 +41,8 @@ export default function Header({ logoutAction, role }: { logoutAction?: () => Pr
     { name: 'Preporuči i zaradi', href: '/dashboard/preporuke', icon: <Share2 size={16} /> },
     { name: 'Postavke profila', href: '/dashboard/postavke', icon: <Settings size={16} /> },
   ];
+
+  const navigation = isLoggedIn ? privateNavigation : publicNavigation;
 
   if (role === 'admin') {
     navigation.unshift({ name: 'Admin Panel', href: '/admin', icon: <Shield size={16} /> });
