@@ -4,26 +4,26 @@ import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
 export default function PortfolioPage() {
-  const [files, setFiles] = useState<any[]>([]);
+  const [works, setWorks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const supabase = createClient();
 
-  const fileNameMap: { [key: string]: string } = {
-    '0.40617449468938194.docx': 'ZAVRŠNI RAD - Dioklecijanova palača kao turistički brand grada Splita',
-  };
-
   useEffect(() => {
-    async function fetchFiles() {
+    async function fetchWorks() {
       setLoading(true);
-      const { data, error } = await supabase.storage.from('portfolio').list();
+      const { data, error } = await supabase
+        .from('portfolio_works')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
       if (error) {
-        console.error('Error fetching files:', error);
+        console.error('Error fetching works:', error);
       } else {
-        setFiles(data || []);
+        setWorks(data || []);
       }
       setLoading(false);
     }
-    fetchFiles();
+    fetchWorks();
   }, [supabase]);
 
   const handleDownload = async (url: string, filename: string) => {
@@ -52,26 +52,30 @@ export default function PortfolioPage() {
         <p>Učitavanje...</p>
       ) : (
         <ul className="space-y-4">
-          {files.map((file) => {
-            const { data } = supabase.storage.from('portfolio').getPublicUrl(file.name);
-            const displayName = fileNameMap[file.name] || file.name;
-            const isPdf = file.name.toLowerCase().endsWith('.pdf');
-            const extension = file.name.substring(file.name.lastIndexOf('.'));
-            const downloadName = fileNameMap[file.name] ? `${fileNameMap[file.name]}${extension}` : file.name;
+          {works.map((work) => {
+            const isPdf = work.file_url.toLowerCase().endsWith('.pdf');
+            // Extract filename from URL to use as base for download name
+            const urlParts = work.file_url.split('/');
+            const originalFilename = urlParts[urlParts.length - 1];
+            const extension = originalFilename.substring(originalFilename.lastIndexOf('.'));
+            const downloadName = `${work.title}${extension}`;
             
             return (
-              <li key={file.id} className="border p-4 rounded shadow flex items-center justify-between">
-                <p className="font-semibold">{displayName}</p>
+              <li key={work.id} className="border p-4 rounded shadow flex items-center justify-between">
+                <div>
+                  <p className="font-semibold">{work.title}</p>
+                  {work.description && <p className="text-sm text-zinc-600">{work.description}</p>}
+                </div>
                 <div className="flex gap-2">
                   <button 
-                    onClick={() => handleDownload(data.publicUrl, downloadName)}
+                    onClick={() => handleDownload(work.file_url, downloadName)}
                     className="px-3 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-sm"
                   >
                     Preuzmi
                   </button>
                   {isPdf && (
                     <a 
-                      href={data.publicUrl} 
+                      href={work.file_url} 
                       target="_blank" 
                       rel="noreferrer" 
                       className="px-3 py-1 bg-zinc-200 text-zinc-800 rounded hover:bg-zinc-300 text-sm"
