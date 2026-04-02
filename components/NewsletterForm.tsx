@@ -21,7 +21,14 @@ export default function NewsletterForm() {
 
       if (error) throw error;
 
-      setMessage({ type: 'success', text: 'Hvala na prijavi!' });
+      // Send welcome email
+      await fetch('/api/send-welcome', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+
+      setMessage({ type: 'success', text: 'Hvala na prijavi! Provjerite svoj e-mail.' });
       setEmail('');
     } catch (err: any) {
       console.error('Newsletter error:', err);

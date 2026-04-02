@@ -7,6 +7,7 @@ export default function AdminNewsletterPage() {
   const [subject, setSubject] = useState('');
   const [html, setHtml] = useState('');
   const [templates, setTemplates] = useState<any[]>([]);
+  const [subscribers, setSubscribers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
@@ -17,9 +18,15 @@ export default function AdminNewsletterPage() {
     if (data) setTemplates(data);
   }, [supabase]);
 
+  const fetchSubscribers = useCallback(async () => {
+    const { data } = await supabase.from('newsletter_subscribers').select('*').order('created_at', { ascending: false });
+    if (data) setSubscribers(data);
+  }, [supabase]);
+
   useEffect(() => {
     fetchTemplates();
-  }, [fetchTemplates]);
+    fetchSubscribers();
+  }, [fetchTemplates, fetchSubscribers]);
 
   const saveTemplate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,6 +92,16 @@ export default function AdminNewsletterPage() {
               <button onClick={() => setHtml(t.html_content)} className="text-indigo-600">Učitaj</button>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* Lista pretplatnika */}
+      <div className="mt-8">
+        <h2 className="text-xl font-semibold mb-4">Newsletter pretplatnici ({subscribers.length})</h2>
+        <div className="bg-white p-4 rounded border">
+          <div className="p-4 bg-zinc-50 rounded-xl border border-zinc-100 text-sm font-mono break-all">
+            {subscribers.map((s) => s.email).join(', ')}
+          </div>
         </div>
       </div>
     </div>
