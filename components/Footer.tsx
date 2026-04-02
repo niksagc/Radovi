@@ -2,6 +2,7 @@ import Link from 'next/link';
 import Logo from './Logo';
 import { createClient } from '@/lib/supabase/server';
 import { Facebook, Instagram } from 'lucide-react';
+import NewsletterForm from './NewsletterForm';
 
 export default async function Footer() {
   const supabase = await createClient();
@@ -23,7 +24,7 @@ export default async function Footer() {
   return (
     <footer className="bg-white border-t border-zinc-200 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-8">
+        <div className="flex flex-col md:flex-row justify-between items-start gap-8">
           <div className="flex flex-col items-center md:items-start gap-4">
             <Link href="/">
               <Logo variant="full" className="opacity-80 grayscale hover:grayscale-0 transition-all" />
@@ -32,7 +33,8 @@ export default async function Footer() {
               {footerText}
             </div>
           </div>
-          <div className="flex flex-col items-center md:items-end gap-4">
+          <div className="flex flex-col items-center md:items-end gap-6">
+            <NewsletterForm />
             <div className="flex flex-wrap justify-center gap-6">
               <Link href="/p/o-nama" className="text-sm text-zinc-500 hover:text-indigo-600 transition-colors">O nama</Link>
               <Link href="/p/uvjeti-poslovanja" className="text-sm text-zinc-500 hover:text-indigo-600 transition-colors">Uvjeti poslovanja</Link>
