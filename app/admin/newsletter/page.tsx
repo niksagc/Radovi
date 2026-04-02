@@ -1,28 +1,52 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
 export default function AdminNewsletterPage() {
   const [subject, setSubject] = useState('');
   const [html, setHtml] = useState('');
+  const [templates, setTemplates] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
+  const supabase = createClient();
+
+  useEffect(() => {
+    fetchTemplates();
+  }, []);
+
+  const fetchTemplates = async () => {
+    const { data } = await supabase.from('email_templates').select('*');
+    if (data) setTemplates(data);
+  };
+
+  const saveTemplate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const formData = new FormData(e.target as HTMLFormElement);
+    const { error } = await supabase.from('email_templates').insert({
+      name: formData.get('name'),
+      html_content: html,
+      start_date: formData.get('start_date'),
+      end_date: formData.get('end_date'),
+    });
+    if (error) setMessage({ type: 'error', text: error.message });
+    else {
+      setMessage({ type: 'success', text: 'Predložak spremljen!' });
+      fetchTemplates();
+    }
+  };
+
   const sendNewsletter = async () => {
     setLoading(true);
-    setMessage(null);
     try {
       const response = await fetch('/api/send-newsletter', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ subject, html }),
       });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error);
-      setMessage({ type: 'success', text: 'Newsletter uspješno poslan!' });
-      setSubject('');
-      setHtml('');
+      if (!response.ok) throw new Error('Greška pri slanju');
+      setMessage({ type: 'success', text: 'Newsletter poslan!' });
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message });
     } finally {
@@ -31,37 +55,36 @@ export default function AdminNewsletterPage() {
   };
 
   return (
-    <div>
-      <h1 className="text-3xl font-bold text-zinc-900 mb-8">Newsletter</h1>
+    <div className="p-8 max-w-4xl mx-auto">
+      <h1 className="text-3xl font-bold mb-8">Newsletter Manager</h1>
 
-      <div className="bg-white p-8 rounded-2xl shadow-sm border border-zinc-200 mb-8">
-        <h2 className="text-xl font-semibold mb-4">Pošalji newsletter</h2>
-        <div className="space-y-4">
-          <input
-            type="text"
-            placeholder="Naslov e-maila"
-            value={subject}
-            onChange={(e) => setSubject(e.target.value)}
-            className="w-full rounded-xl border border-zinc-300 px-4 py-2"
-          />
-          <textarea
-            placeholder="HTML sadržaj e-maila"
-            value={html}
-            onChange={(e) => setHtml(e.target.value)}
-            className="w-full rounded-xl border border-zinc-300 px-4 py-2 h-40"
-          />
-          <button
-            onClick={sendNewsletter}
-            disabled={loading}
-            className="px-6 py-2 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-colors"
-          >
-            {loading ? 'Slanje...' : 'Pošalji svima'}
-          </button>
-          {message && (
-            <p className={`text-sm ${message.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
-              {message.text}
-            </p>
-          )}
+      {/* Forma za slanje */}
+      <div className="bg-white p-6 rounded-xl shadow-sm border mb-8">
+        <h2 className="text-xl font-semibold mb-4">Slanje</h2>
+        <input className="w-full border p-2 mb-2 rounded" placeholder="Naslov" value={subject} onChange={e => setSubject(e.target.value)} />
+        <textarea className="w-full border p-2 mb-2 rounded h-32" placeholder="HTML" value={html} onChange={e => setHtml(e.target.value)} />
+        <button onClick={sendNewsletter} className="bg-indigo-600 text-white px-4 py-2 rounded">Pošalji</button>
+      </div>
+
+      {/* Forma za spremanje predloška */}
+      <form onSubmit={saveTemplate} className="bg-white p-6 rounded-xl shadow-sm border">
+        <h2 className="text-xl font-semibold mb-4">Spremi novi predložak</h2>
+        <input name="name" className="w-full border p-2 mb-2 rounded" placeholder="Ime predloška" required />
+        <input name="start_date" type="date" className="w-full border p-2 mb-2 rounded" />
+        <input name="end_date" type="date" className="w-full border p-2 mb-2 rounded" />
+        <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded">Spremi predložak</button>
+      </form>
+
+      {/* Lista predložaka */}
+      <div className="mt-8">
+        <h2 className="text-xl font-semibold mb-4">Postojeći predlošci</h2>
+        <div className="grid gap-4">
+          {templates.map(t => (
+            <div key={t.id} className="bg-white p-4 rounded border flex justify-between items-center">
+              <span>{t.name} ({t.start_date} - {t.end_date})</span>
+              <button onClick={() => setHtml(t.html_content)} className="text-indigo-600">Učitaj</button>
+            </div>
+          ))}
         </div>
       </div>
     </div>
