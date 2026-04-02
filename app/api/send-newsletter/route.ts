@@ -16,7 +16,7 @@ export async function POST(req: Request) {
 
     if (error) throw error;
 
-    const emails = subscribers?.map((s) => s.email) || [];
+    const emails = subscribers?.map((s: { email: string }) => s.email) || [];
     if (emails.length === 0) {
       return NextResponse.json({ message: 'Nema pretplatnika za slanje.' }, { status: 400 });
     }

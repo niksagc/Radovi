@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
 export default function AdminNewsletterPage() {
@@ -12,14 +12,14 @@ export default function AdminNewsletterPage() {
 
   const supabase = createClient();
 
-  useEffect(() => {
-    fetchTemplates();
-  }, []);
-
-  const fetchTemplates = async () => {
+  const fetchTemplates = useCallback(async () => {
     const { data } = await supabase.from('email_templates').select('*');
     if (data) setTemplates(data);
-  };
+  }, [supabase]);
+
+  useEffect(() => {
+    fetchTemplates();
+  }, [fetchTemplates]);
 
   const saveTemplate = async (e: React.FormEvent) => {
     e.preventDefault();
