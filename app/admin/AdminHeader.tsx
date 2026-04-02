@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X, LogOut, Home, LayoutDashboard, Package, MessageSquare, LayoutGrid, Users, FileText, Tag, FileStack, Settings, Image as ImageIcon } from 'lucide-react';
+import { Menu, X, LogOut, Home, LayoutDashboard, Package, MessageSquare, LayoutGrid, Users, FileText, Tag, FileStack, Settings, Image as ImageIcon, Mail } from 'lucide-react';
 import Logo from '@/components/Logo';
 
 export default function AdminHeader({ logoutAction }: { logoutAction: () => Promise<void> }) {
@@ -20,6 +20,7 @@ export default function AdminHeader({ logoutAction }: { logoutAction: () => Prom
     { name: 'Stranice', href: '/admin/stranice', icon: <FileText size={16} /> },
     { name: 'Popusti', href: '/admin/popusti', icon: <Tag size={16} /> },
     { name: 'Radovi', href: '/admin/radovi', icon: <FileStack size={16} /> },
+    { name: 'Newsletter', href: '/admin/newsletter', icon: <Mail size={16} /> },
     { name: 'Logo', href: '/admin/logo', icon: <ImageIcon size={16} /> },
     { name: 'Postavke', href: '/admin/postavke', icon: <Settings size={16} /> },
   ];
