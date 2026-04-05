@@ -30,6 +30,17 @@ export async function validateReferralCode(code: string) {
     .select('*', { count: 'exact', head: true })
     .eq('student_id', user.id);
 
+  // Check if user has already used this specific code
+  const { count: usedCount } = await supabase
+    .from('orders')
+    .select('*', { count: 'exact', head: true })
+    .eq('student_id', user.id)
+    .eq('referral_code_used', code);
+
+  if (usedCount && usedCount > 0) {
+    return { valid: false, message: 'Već ste iskoristili ovaj kod.' };
+  }
+
   if (count && count > 0) {
     return { valid: false, message: 'Kod vrijedi samo za prvu narudžbu.' };
   }

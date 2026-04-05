@@ -57,12 +57,12 @@ export default function Header({ logoutAction, role }: { logoutAction?: () => Pr
           </Link>
           
           {/* Desktop Navigation */}
-          <nav className="ml-10 hidden md:flex space-x-4">
+          <nav className="ml-4 hidden md:flex gap-2">
             {navigation.map((item) => (
               <Link
                 key={item.name}
                 href={item.href}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border transition-all text-sm font-medium ${
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border transition-all text-xs font-medium ${
                   pathname === item.href 
                     ? 'bg-indigo-50 border-indigo-200 text-indigo-700' 
                     : 'bg-white border-zinc-200 text-zinc-600 hover:border-indigo-200 hover:bg-zinc-50'
