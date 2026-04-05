@@ -1,13 +1,34 @@
-import { createClient } from '@/lib/supabase/server';
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import { createClient } from '@/lib/supabase/client';
 import DiscountForm from './DiscountForm';
 
-export default async function AdminDiscountsPage() {
-  const supabase = await createClient();
-  
-  const { data: templates } = await supabase
-    .from('discount_templates')
-    .select('*')
-    .order('created_at', { ascending: false });
+export default function AdminDiscountsPage() {
+  const [templates, setTemplates] = useState<any[]>([]);
+  const supabase = createClient();
+
+  const fetchTemplates = useCallback(async () => {
+    const { data } = await supabase
+      .from('discount_templates')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (data) setTemplates(data);
+  }, [supabase]);
+
+  useEffect(() => {
+    fetchTemplates();
+  }, [fetchTemplates]);
+
+  const deleteTemplate = async (id: number) => {
+    if (!confirm('Jeste li sigurni da želite obrisati ovaj predložak popusta?')) return;
+    const { error } = await supabase.from('discount_templates').delete().eq('id', id);
+    if (error) alert(error.message);
+    else {
+      alert('Predložak popusta obrisan!');
+      fetchTemplates();
+    }
+  };
 
   return (
     <div>
@@ -33,8 +54,16 @@ export default async function AdminDiscountsPage() {
                     {template.expires_at && ` | Istječe: ${new Date(template.expires_at).toLocaleDateString('hr-HR')}`}
                   </p>
                 </div>
-                <div className="text-sm font-medium text-indigo-600">
-                  {template.is_active ? 'Aktivan' : 'Neaktivan'}
+                <div className="flex items-center gap-4">
+                  <div className="text-sm font-medium text-indigo-600">
+                    {template.is_active ? 'Aktivan' : 'Neaktivan'}
+                  </div>
+                  <button 
+                    onClick={() => deleteTemplate(template.id)}
+                    className="text-red-600 hover:text-red-800 text-sm font-medium"
+                  >
+                    Obriši
+                  </button>
                 </div>
               </div>
             ))}

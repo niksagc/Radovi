@@ -24,9 +24,10 @@ export default function DiscountForm() {
       const response = await fetch('/api/admin/generate-discount', {
         method: 'POST',
         body: JSON.stringify({
-          email: formData.get('email'),
+          emails: (formData.get('emails') as string).split(',').map(e => e.trim()),
           value: parseFloat(formData.get('value') as string),
           expiresAt: formData.get('expiresAt'),
+          emailContent: formData.get('emailContent'),
         }),
       });
       const data = await response.json();
@@ -126,13 +127,22 @@ export default function DiscountForm() {
       ) : (
         <>
           <div>
-            <label className="block text-sm font-medium text-zinc-700 mb-1">Email korisnika</label>
-            <input
-              type="email"
-              name="email"
+            <label className="block text-sm font-medium text-zinc-700 mb-1">Emailovi korisnika (odvojeni zarezom)</label>
+            <textarea
+              name="emails"
               required
               className="w-full rounded-xl border border-zinc-300 px-4 py-2 focus:ring-indigo-500 focus:border-indigo-500"
-              placeholder="korisnik@email.com"
+              placeholder="korisnik1@email.com, korisnik2@email.com, ..."
+              rows={3}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-zinc-700 mb-1">Tekst e-maila</label>
+            <textarea
+              name="emailContent"
+              className="w-full rounded-xl border border-zinc-300 px-4 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+              placeholder="Poštovani, za vas smo generirali poseban kod za popust..."
+              rows={5}
             />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
