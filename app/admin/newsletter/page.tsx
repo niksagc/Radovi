@@ -12,6 +12,7 @@ export default function AdminNewsletterPage() {
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
   const [preview, setPreview] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
 
   const supabase = createClient();
 
@@ -49,10 +50,28 @@ export default function AdminNewsletterPage() {
   const saveTemplate = async (e: React.FormEvent) => {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
+    let imageUrl = '';
+    
+    if (file) {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const { data, error } = await supabase.storage
+        .from('newsletter-images')
+        .upload(fileName, file);
+      if (error) {
+        setMessage({ type: 'error', text: 'Greška pri uploadu slike: ' + error.message });
+        return;
+      }
+      const { data: publicUrlData } = supabase.storage
+        .from('newsletter-images')
+        .getPublicUrl(fileName);
+      imageUrl = publicUrlData.publicUrl;
+    }
+
     const { error } = await supabase.from('email_templates').insert({
       name: formData.get('name'),
       html_content: formData.get('html_content'),
-      image_url: formData.get('image_url'),
+      image_url: imageUrl || formData.get('image_url'),
       start_date: formData.get('start_date'),
       end_date: formData.get('end_date'),
     });
@@ -60,6 +79,7 @@ export default function AdminNewsletterPage() {
     else {
       setMessage({ type: 'success', text: 'Predložak spremljen!' });
       fetchTemplates();
+      setFile(null);
     }
   };
 
@@ -107,7 +127,12 @@ export default function AdminNewsletterPage() {
           {preview ? 'Zatvori pretpregled' : 'Pretpregled'}
         </button>
         {preview && (
-          <div className="mt-4 p-4 border rounded bg-white" dangerouslySetInnerHTML={{ __html: html.replace('{{DISCOUNT_CODE}}', 'TEST-CODE-123') }} />
+          <div className="mt-4 p-4 border rounded bg-white relative inline-block">
+            <img src={html} alt="Preview" className="max-w-full h-auto" />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-white font-bold text-2xl bg-black/50 p-2 rounded">Kupon: TEST-CODE-123</span>
+            </div>
+          </div>
         )}
       </div>
 
@@ -116,7 +141,8 @@ export default function AdminNewsletterPage() {
         <h2 className="text-xl font-semibold mb-4">Spremi novi predložak</h2>
         <input name="name" className="w-full border p-2 mb-2 rounded" placeholder="Ime predloška" required />
         <textarea name="html_content" className="w-full border p-2 mb-2 rounded h-32" placeholder="HTML sadržaj predloška" required />
-        <input name="image_url" className="w-full border p-2 mb-2 rounded" placeholder="URL slike predloška" />
+        <input type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} className="w-full border p-2 mb-2 rounded" />
+        <input name="image_url" className="w-full border p-2 mb-2 rounded" placeholder="URL slike predloška (ako ne uploadate)" />
         <input name="start_date" type="date" className="w-full border p-2 mb-2 rounded" />
         <input name="end_date" type="date" className="w-full border p-2 mb-2 rounded" />
         <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded">Spremi predložak</button>
