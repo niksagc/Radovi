@@ -13,11 +13,11 @@ export async function POST(req: Request) {
     // 1. Get all subscribers and registered users
     const { data: subscribers, error: subError } = await supabase
       .from('newsletter_subscribers')
-      .select('email, discount_code');
+      .select('email');
 
     const { data: profiles, error: profError } = await supabase
       .from('profiles')
-      .select('email, discount_code');
+      .select('email');
 
     if (subError) throw subError;
     if (profError) throw profError;
