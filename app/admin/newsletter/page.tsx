@@ -30,11 +30,10 @@ export default function AdminNewsletterPage() {
 
   const saveTemplate = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Saving template with HTML:', html);
     const formData = new FormData(e.target as HTMLFormElement);
     const { error } = await supabase.from('email_templates').insert({
       name: formData.get('name'),
-      html_content: html,
+      html_content: formData.get('html_content'),
       start_date: formData.get('start_date'),
       end_date: formData.get('end_date'),
     });
@@ -78,6 +77,7 @@ export default function AdminNewsletterPage() {
       <form onSubmit={saveTemplate} className="bg-white p-6 rounded-xl shadow-sm border">
         <h2 className="text-xl font-semibold mb-4">Spremi novi predložak</h2>
         <input name="name" className="w-full border p-2 mb-2 rounded" placeholder="Ime predloška" required />
+        <textarea name="html_content" className="w-full border p-2 mb-2 rounded h-32" placeholder="HTML sadržaj predloška" required />
         <input name="start_date" type="date" className="w-full border p-2 mb-2 rounded" />
         <input name="end_date" type="date" className="w-full border p-2 mb-2 rounded" />
         <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded">Spremi predložak</button>
