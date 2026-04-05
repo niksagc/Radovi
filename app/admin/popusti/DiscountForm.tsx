@@ -43,6 +43,7 @@ export default function DiscountForm() {
         value: parseFloat(formData.get('value') as string),
         expires_at: formData.get('expiresAt') || null,
         is_active: true,
+        is_main_banner: formData.get('is_main_banner') === 'on',
       };
 
       try {
@@ -99,6 +100,16 @@ export default function DiscountForm() {
               className="w-full rounded-xl border border-zinc-300 px-4 py-2 focus:ring-indigo-500 focus:border-indigo-500"
               placeholder="npr. Popust za prvu narudžbu"
             />
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              name="is_main_banner"
+              id="is_main_banner"
+              className="rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500"
+            />
+            <label htmlFor="is_main_banner" className="text-sm font-medium text-zinc-700">Postavi kao glavni baner</label>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

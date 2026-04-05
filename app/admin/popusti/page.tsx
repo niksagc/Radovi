@@ -58,6 +58,9 @@ export default function AdminDiscountsPage() {
                   <div className="text-sm font-medium text-indigo-600">
                     {template.is_active ? 'Aktivan' : 'Neaktivan'}
                   </div>
+                  <div className="text-sm font-medium text-zinc-600">
+                    {template.is_main_banner ? 'Glavni baner' : ''}
+                  </div>
                   <button 
                     onClick={() => deleteTemplate(template.id)}
                     className="text-red-600 hover:text-red-800 text-sm font-medium"
