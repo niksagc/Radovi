@@ -30,34 +30,52 @@ export async function POST(req: Request) {
     }
 
     // 2. Send personalized emails
+    let successCount = 0;
+    let errorCount = 0;
+
     for (const user of uniqueUsers) {
-      // Generate a code
-      const code = generateDiscountCode();
-      
-      // Save code to database
-      const { error: insertError } = await supabase
-        .from('discount_codes')
-        .insert({
-          code: code,
-          discount_percent: 10, // Assuming 10% for newsletter
-          is_active: true
+      try {
+        // Generate a code
+        const code = generateDiscountCode();
+        
+        // Save code to database
+        const { error: insertError } = await supabase
+          .from('discount_codes')
+          .insert({
+            code: code,
+            discount_percent: 10, // Assuming 10% for newsletter
+            is_active: true
+          });
+
+        if (insertError) {
+          console.error(`Error saving discount code for ${user.email}:`, insertError);
+          errorCount++;
+          continue;
+        }
+        
+        const personalizedHtml = html.replace('{{DISCOUNT_CODE}}', code);
+        
+        const emailResult = await sendEmail({
+          to: user.email,
+          subject: subject,
+          html: personalizedHtml,
         });
 
-      if (insertError) {
-        console.error('Error saving discount code:', insertError);
-        continue;
+        if (!emailResult.success) {
+          console.error(`Error sending email to ${user.email}:`, emailResult.error);
+          errorCount++;
+        } else {
+          successCount++;
+        }
+      } catch (err) {
+        console.error(`Unexpected error processing user ${user.email}:`, err);
+        errorCount++;
       }
-      
-      const personalizedHtml = html.replace('{{DISCOUNT_CODE}}', code);
-      
-      await sendEmail({
-        to: user.email,
-        subject: subject,
-        html: personalizedHtml,
-      });
     }
 
-    return NextResponse.json({ message: 'Newsletter uspješno poslan svim korisnicima!' });
+    return NextResponse.json({ 
+      message: `Newsletter proces završen. Uspješno poslano: ${successCount}, Greške: ${errorCount}` 
+    });
   } catch (err: any) {
     console.error('Newsletter sending error:', err);
     return NextResponse.json({ error: err.message }, { status: 500 });
