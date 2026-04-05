@@ -7,13 +7,13 @@ export async function POST(request: Request) {
   try {
     console.log('Creating storage buckets...');
     const { data: buckets } = await supabase.storage.listBuckets();
-    const requiredBuckets = ['orders', 'preorders'];
+    const requiredBuckets = ['orders', 'preorders', 'newsletter-images'];
     
     for (const bucketName of requiredBuckets) {
       const exists = buckets?.find((b: any) => b.name === bucketName);
       if (!exists) {
         const { error: bErr } = await supabase.storage.createBucket(bucketName, {
-          public: false,
+          public: bucketName === 'newsletter-images',
           fileSizeLimit: 10737418240, // 10GB
         });
         if (bErr) {

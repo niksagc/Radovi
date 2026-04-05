@@ -13,6 +13,7 @@ export default function AdminNewsletterPage() {
 
   const [preview, setPreview] = useState(false);
   const [file, setFile] = useState<File | null>(null);
+  const [discountCode, setDiscountCode] = useState('');
 
   const supabase = createClient();
 
@@ -95,7 +96,7 @@ export default function AdminNewsletterPage() {
       // Zamjena varijabli
       const processedHtml = html
         .replace('{{IMAGE_URL}}', templates.find(t => t.name === subject)?.image_url || '')
-        .replace('{{DISCOUNT_CODE}}', 'TEST-CODE-123'); // Ovdje bi išao pravi kod
+        .replace('{{DISCOUNT_CODE}}', discountCode);
 
       const response = await fetch('/api/send-newsletter', {
         method: 'POST',
@@ -126,6 +127,7 @@ export default function AdminNewsletterPage() {
       <div className="bg-white p-6 rounded-xl shadow-sm border mb-8">
         <h2 className="text-xl font-semibold mb-4">Slanje</h2>
         <input className="w-full border p-2 mb-2 rounded" placeholder="Naslov" value={subject} onChange={e => setSubject(e.target.value)} />
+        <input className="w-full border p-2 mb-2 rounded" placeholder="Kupon kod" value={discountCode} onChange={e => setDiscountCode(e.target.value)} />
         <textarea className="w-full border p-2 mb-2 rounded h-32" placeholder="HTML" value={html} onChange={e => setHtml(e.target.value)} />
         <button onClick={sendNewsletter} disabled={loading} className="bg-indigo-600 text-white px-4 py-2 rounded disabled:opacity-50 hover:bg-indigo-700 transition-colors cursor-pointer">
           {loading ? 'Slanje...' : 'Pošalji'}
@@ -137,7 +139,7 @@ export default function AdminNewsletterPage() {
           <div className="mt-4 p-4 border rounded bg-white relative inline-block">
             <img src={html} alt="Preview" className="max-w-full h-auto" />
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-white font-bold text-2xl bg-black/50 p-2 rounded">Kupon: TEST-CODE-123</span>
+              <span className="text-white font-bold text-2xl bg-black/50 p-2 rounded">Kupon: {discountCode}</span>
             </div>
           </div>
         )}
