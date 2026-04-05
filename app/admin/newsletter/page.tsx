@@ -86,12 +86,20 @@ export default function AdminNewsletterPage() {
     <div className="p-8 max-w-4xl mx-auto">
       <h1 className="text-3xl font-bold mb-8">Newsletter Manager</h1>
 
+      {message && (
+        <div className={`p-4 mb-4 rounded ${message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+          {message.text}
+        </div>
+      )}
+
       {/* Forma za slanje */}
       <div className="bg-white p-6 rounded-xl shadow-sm border mb-8">
         <h2 className="text-xl font-semibold mb-4">Slanje</h2>
         <input className="w-full border p-2 mb-2 rounded" placeholder="Naslov" value={subject} onChange={e => setSubject(e.target.value)} />
         <textarea className="w-full border p-2 mb-2 rounded h-32" placeholder="HTML" value={html} onChange={e => setHtml(e.target.value)} />
-        <button onClick={sendNewsletter} className="bg-indigo-600 text-white px-4 py-2 rounded">Pošalji</button>
+        <button onClick={sendNewsletter} disabled={loading} className="bg-indigo-600 text-white px-4 py-2 rounded disabled:opacity-50">
+          {loading ? 'Slanje...' : 'Pošalji'}
+        </button>
       </div>
 
       {/* Forma za spremanje predloška */}
