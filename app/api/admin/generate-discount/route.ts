@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { sendEmail } from '@/lib/email';
-import crypto from 'crypto';
+import { generateDiscountCode } from '@/lib/utils/discount-code';
 
 export async function POST(request: Request) {
   try {
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
     const results = [];
     for (const user of userData) {
       // Generate unique code
-      const code = crypto.randomBytes(4).toString('hex').toUpperCase();
+      const code = generateDiscountCode();
       const expiresAtDate = expiresAt ? new Date(expiresAt) : new Date(Date.now() + 60 * 24 * 60 * 60 * 1000);
 
       // Insert into user_discounts

@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { sendEmail } from '@/lib/email';
-import crypto from 'crypto';
+import { generateDiscountCode } from '@/lib/utils/discount-code';
 
 export async function generateAndSendWelcomeDiscount(userId: string, email: string) {
   const supabase = await createClient();
@@ -23,7 +23,7 @@ export async function generateAndSendWelcomeDiscount(userId: string, email: stri
           
         if (existingDiscount) continue;
 
-        const code = crypto.randomBytes(4).toString('hex').toUpperCase();
+        const code = generateDiscountCode();
         const expiresAtDate = template.expires_at ? new Date(template.expires_at) : new Date(Date.now() + 60 * 24 * 60 * 60 * 1000);
 
         await supabase
