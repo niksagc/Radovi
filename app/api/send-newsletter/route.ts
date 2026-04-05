@@ -1,9 +1,7 @@
-import { Resend } from 'resend';
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { generateDiscountCode } from '@/lib/utils/discount';
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+import { sendEmail } from '@/lib/email';
 
 export async function POST(req: Request) {
   try {
@@ -39,8 +37,7 @@ export async function POST(req: Request) {
       
       const personalizedHtml = html.replace('{{DISCOUNT_CODE}}', code);
       
-      await resend.emails.send({
-        from: `${process.env.FROM_NAME} <${process.env.FROM_EMAIL}>`,
+      await sendEmail({
         to: user.email,
         subject: subject,
         html: personalizedHtml,
