@@ -31,9 +31,8 @@ export async function POST(req: Request) {
 
     // 2. Send personalized emails
     for (const user of uniqueUsers) {
-      // Generate a code based on the subject (campaign) and user email to ensure uniqueness per campaign
-      const campaignPrefix = subject.replace(/\s+/g, '-').toUpperCase();
-      const code = generateDiscountCode(campaignPrefix);
+      // Generate a code
+      const code = generateDiscountCode();
       
       const personalizedHtml = html.replace('{{DISCOUNT_CODE}}', code);
       

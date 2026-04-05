@@ -116,6 +116,7 @@ CREATE TABLE public.orders (
   subtotal_cents INT NOT NULL DEFAULT 0,
   addons_total_cents INT NOT NULL DEFAULT 0,
   total_cents INT NOT NULL DEFAULT 0,
+  discount_code_id UUID REFERENCES public.discount_codes(id) ON DELETE SET NULL,
   
   -- Split fields
   payment_model TEXT NOT NULL DEFAULT '100%' CHECK (payment_model IN ('100%', '50-50')),
