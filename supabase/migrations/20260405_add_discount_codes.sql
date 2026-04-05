@@ -35,6 +35,9 @@ ALTER TABLE public.discount_codes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.used_discount_codes ENABLE ROW LEVEL SECURITY;
 
 -- Policies
+CREATE POLICY "Anyone can read active discount templates" ON public.discount_templates FOR SELECT USING (is_active = true);
+CREATE POLICY "Admins can manage discount templates" ON public.discount_templates USING (public.is_admin());
+
 CREATE POLICY "Anyone can read active discount codes" ON public.discount_codes FOR SELECT USING (is_active = true);
 CREATE POLICY "Admins can manage discount codes" ON public.discount_codes USING (public.is_admin());
 
