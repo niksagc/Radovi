@@ -37,9 +37,13 @@ export default function DiscountBanner() {
     return null;
   }
 
+  const generateCode = (name: string, value: number) => {
+    return (name.toUpperCase().replace(/\s/g, '').substring(0, 4) + value).toUpperCase();
+  };
+
   return (
     <div className="bg-pink-600 text-white text-center py-2 px-4 text-sm font-medium">
-      {discount.value}% Popusta na {discount.name}: <span className="font-bold bg-white text-pink-600 px-2 py-0.5 rounded">{discount.code || 'KOD'}</span>
+      {discount.value}% Popusta na {discount.name}: <span className="font-bold bg-white text-pink-600 px-2 py-0.5 rounded">{discount.code || generateCode(discount.name, discount.value)}</span>
     </div>
   );
 }

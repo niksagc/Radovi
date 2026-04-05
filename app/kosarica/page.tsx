@@ -65,7 +65,26 @@ export default function CartPage() {
 
     // If not found in global, check user-specific discounts
     if (discountError || !discount) {
-      if (user) {
+      // Check discount_codes table
+      const { data: codeDiscount, error: codeDiscountError } = await supabase
+        .from('discount_codes')
+        .select('*')
+        .eq('code', discountInput)
+        .eq('is_active', true)
+        .single();
+      
+      if (!codeDiscountError && codeDiscount) {
+        // Check expiry
+        if (codeDiscount.valid_until && new Date(codeDiscount.valid_until) < new Date()) {
+          setDiscountError('Kod je istekao.');
+          return;
+        }
+        discount = {
+          ...codeDiscount,
+          value: codeDiscount.discount_percent,
+          name: 'Newsletter popust'
+        };
+      } else if (user) {
         const { data: userDiscount, error: userDiscountError } = await supabase
           .from('user_discounts')
           .select('*')

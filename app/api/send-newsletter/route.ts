@@ -34,6 +34,20 @@ export async function POST(req: Request) {
       // Generate a code
       const code = generateDiscountCode();
       
+      // Save code to database
+      const { error: insertError } = await supabase
+        .from('discount_codes')
+        .insert({
+          code: code,
+          discount_percent: 10, // Assuming 10% for newsletter
+          is_active: true
+        });
+
+      if (insertError) {
+        console.error('Error saving discount code:', insertError);
+        continue;
+      }
+      
       const personalizedHtml = html.replace('{{DISCOUNT_CODE}}', code);
       
       await sendEmail({
