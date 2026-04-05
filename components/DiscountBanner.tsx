@@ -10,7 +10,7 @@ export default function DiscountBanner() {
   useEffect(() => {
     const fetchActiveDiscount = async () => {
       const { data } = await supabase
-        .from('discount_codes')
+        .from('discounts')
         .select('*')
         .eq('is_active', true)
         .order('created_at', { ascending: false })
