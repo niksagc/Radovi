@@ -28,6 +28,12 @@ export default function AdminNewsletterPage() {
     fetchSubscribers();
   }, [fetchTemplates, fetchSubscribers]);
 
+  const loadTemplate = (template: any) => {
+    setHtml(template.html_content);
+    setSubject(template.name);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const deleteTemplate = async (id: number) => {
     if (!confirm('Jeste li sigurni da želite obrisati ovaj predložak?')) return;
     const { error } = await supabase.from('email_templates').delete().eq('id', id);
@@ -55,6 +61,10 @@ export default function AdminNewsletterPage() {
   };
 
   const sendNewsletter = async () => {
+    if (!subject || !html) {
+      setMessage({ type: 'error', text: 'Molimo unesite naslov i HTML sadržaj.' });
+      return;
+    }
     setLoading(true);
     try {
       const response = await fetch('/api/send-newsletter', {
@@ -62,7 +72,8 @@ export default function AdminNewsletterPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ subject, html }),
       });
-      if (!response.ok) throw new Error('Greška pri slanju');
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Greška pri slanju');
       setMessage({ type: 'success', text: 'Newsletter poslan!' });
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message });
@@ -101,9 +112,7 @@ export default function AdminNewsletterPage() {
             <div key={t.id} className="bg-white p-4 rounded border flex justify-between items-center">
               <span>{t.name} ({t.start_date} - {t.end_date})</span>
               <div className="flex gap-2">
-                <button onClick={() => {
-                  setHtml(t.html_content);
-                }} className="text-indigo-600 cursor-pointer hover:underline">Učitaj</button>
+                <button onClick={() => loadTemplate(t)} className="text-indigo-600 cursor-pointer hover:underline">Učitaj</button>
                 <button onClick={() => deleteTemplate(t.id)} className="text-red-600 cursor-pointer hover:underline">Obriši</button>
               </div>
             </div>
