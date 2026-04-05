@@ -90,10 +90,17 @@ export default function AdminNewsletterPage() {
     }
     setLoading(true);
     try {
+      // Ovdje ćemo dohvatiti odabrani predložak kako bismo dobili njegov image_url
+      // Za sada pretpostavljamo da je html sadržaj već učitan u state
+      // Zamjena varijabli
+      const processedHtml = html
+        .replace('{{IMAGE_URL}}', templates.find(t => t.name === subject)?.image_url || '')
+        .replace('{{DISCOUNT_CODE}}', 'TEST-CODE-123'); // Ovdje bi išao pravi kod
+
       const response = await fetch('/api/send-newsletter', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ subject, html }),
+        body: JSON.stringify({ subject, html: processedHtml }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Greška pri slanju');
