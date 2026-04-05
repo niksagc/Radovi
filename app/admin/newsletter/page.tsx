@@ -93,7 +93,7 @@ export default function AdminNewsletterPage() {
               <button onClick={() => {
                 console.log('Loading template:', t);
                 setHtml(t.html_content);
-              }} className="text-indigo-600">Učitaj</button>
+              }} className="text-indigo-600 cursor-pointer hover:underline">Učitaj</button>
             </div>
           ))}
         </div>
