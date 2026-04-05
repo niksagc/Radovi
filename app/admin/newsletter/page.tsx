@@ -28,6 +28,16 @@ export default function AdminNewsletterPage() {
     fetchSubscribers();
   }, [fetchTemplates, fetchSubscribers]);
 
+  const deleteTemplate = async (id: number) => {
+    if (!confirm('Jeste li sigurni da želite obrisati ovaj predložak?')) return;
+    const { error } = await supabase.from('email_templates').delete().eq('id', id);
+    if (error) setMessage({ type: 'error', text: error.message });
+    else {
+      setMessage({ type: 'success', text: 'Predložak obrisan!' });
+      fetchTemplates();
+    }
+  };
+
   const saveTemplate = async (e: React.FormEvent) => {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
@@ -90,10 +100,12 @@ export default function AdminNewsletterPage() {
           {templates.map(t => (
             <div key={t.id} className="bg-white p-4 rounded border flex justify-between items-center">
               <span>{t.name} ({t.start_date} - {t.end_date})</span>
-              <button onClick={() => {
-                console.log('Loading template:', t);
-                setHtml(t.html_content);
-              }} className="text-indigo-600 cursor-pointer hover:underline">Učitaj</button>
+              <div className="flex gap-2">
+                <button onClick={() => {
+                  setHtml(t.html_content);
+                }} className="text-indigo-600 cursor-pointer hover:underline">Učitaj</button>
+                <button onClick={() => deleteTemplate(t.id)} className="text-red-600 cursor-pointer hover:underline">Obriši</button>
+              </div>
             </div>
           ))}
         </div>
