@@ -11,6 +11,8 @@ export default function AdminNewsletterPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
+  const [preview, setPreview] = useState(false);
+
   const supabase = createClient();
 
   const fetchTemplates = useCallback(async () => {
@@ -50,6 +52,7 @@ export default function AdminNewsletterPage() {
     const { error } = await supabase.from('email_templates').insert({
       name: formData.get('name'),
       html_content: formData.get('html_content'),
+      image_url: formData.get('image_url'),
       start_date: formData.get('start_date'),
       end_date: formData.get('end_date'),
     });
@@ -100,6 +103,12 @@ export default function AdminNewsletterPage() {
         <button onClick={sendNewsletter} disabled={loading} className="bg-indigo-600 text-white px-4 py-2 rounded disabled:opacity-50 hover:bg-indigo-700 transition-colors cursor-pointer">
           {loading ? 'Slanje...' : 'Pošalji'}
         </button>
+        <button onClick={() => setPreview(!preview)} className="bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300 transition-colors cursor-pointer ml-2">
+          {preview ? 'Zatvori pretpregled' : 'Pretpregled'}
+        </button>
+        {preview && (
+          <div className="mt-4 p-4 border rounded bg-white" dangerouslySetInnerHTML={{ __html: html.replace('{{DISCOUNT_CODE}}', 'TEST-CODE-123') }} />
+        )}
       </div>
 
       {/* Forma za spremanje predloška */}
@@ -107,6 +116,7 @@ export default function AdminNewsletterPage() {
         <h2 className="text-xl font-semibold mb-4">Spremi novi predložak</h2>
         <input name="name" className="w-full border p-2 mb-2 rounded" placeholder="Ime predloška" required />
         <textarea name="html_content" className="w-full border p-2 mb-2 rounded h-32" placeholder="HTML sadržaj predloška" required />
+        <input name="image_url" className="w-full border p-2 mb-2 rounded" placeholder="URL slike predloška" />
         <input name="start_date" type="date" className="w-full border p-2 mb-2 rounded" />
         <input name="end_date" type="date" className="w-full border p-2 mb-2 rounded" />
         <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded">Spremi predložak</button>
@@ -118,7 +128,10 @@ export default function AdminNewsletterPage() {
         <div className="grid gap-4">
           {templates.map(t => (
             <div key={t.id} className="bg-white p-4 rounded border flex justify-between items-center">
-              <span>{t.name} ({t.start_date} - {t.end_date})</span>
+              <div className="flex items-center gap-4">
+                {t.image_url && <img src={t.image_url} alt={t.name} className="w-16 h-16 object-cover rounded" />}
+                <span>{t.name} ({t.start_date} - {t.end_date})</span>
+              </div>
               <div className="flex gap-2">
                 <button onClick={() => loadTemplate(t)} className="text-indigo-600 cursor-pointer hover:underline">Učitaj</button>
                 <button onClick={() => deleteTemplate(t.id)} className="text-red-600 cursor-pointer hover:underline">Obriši</button>
