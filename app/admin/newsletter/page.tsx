@@ -30,6 +30,7 @@ export default function AdminNewsletterPage() {
 
   const saveTemplate = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('Saving template with HTML:', html);
     const formData = new FormData(e.target as HTMLFormElement);
     const { error } = await supabase.from('email_templates').insert({
       name: formData.get('name'),
@@ -89,7 +90,10 @@ export default function AdminNewsletterPage() {
           {templates.map(t => (
             <div key={t.id} className="bg-white p-4 rounded border flex justify-between items-center">
               <span>{t.name} ({t.start_date} - {t.end_date})</span>
-              <button onClick={() => setHtml(t.html_content)} className="text-indigo-600">Učitaj</button>
+              <button onClick={() => {
+                console.log('Loading template:', t);
+                setHtml(t.html_content);
+              }} className="text-indigo-600">Učitaj</button>
             </div>
           ))}
         </div>
