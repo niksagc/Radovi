@@ -18,6 +18,7 @@ export default function DiscountBanner() {
         .single();
       
       if (data) {
+        console.log('Fetched discount:', data);
         const now = new Date();
         const validFrom = data.valid_from ? new Date(data.valid_from) : null;
         const validUntil = data.valid_until ? new Date(data.valid_until) : null;
