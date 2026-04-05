@@ -13,16 +13,34 @@ export default function AdminHeader({ logoutAction }: { logoutAction: () => Prom
   const navigation = [
     { name: 'Početna', href: '/', icon: <Home size={16} /> },
     { name: 'Nadzorna ploča', href: '/admin', icon: <LayoutDashboard size={16} /> },
-    { name: 'Narudžbe', href: '/admin/narudzbe', icon: <Package size={16} /> },
-    { name: 'Zatražene ponude', href: '/admin/zatrazeni-upiti', icon: <MessageSquare size={16} /> },
+    { 
+      name: 'Narudžbe', 
+      icon: <Package size={16} />,
+      sub: [
+        { name: 'Sve narudžbe', href: '/admin/narudzbe' },
+        { name: 'Zatražene ponude', href: '/admin/zatrazeni-upiti' },
+      ]
+    },
     { name: 'Katalog', href: '/admin/katalog', icon: <LayoutGrid size={16} /> },
     { name: 'Korisnici', href: '/admin/korisnici', icon: <Users size={16} /> },
     { name: 'Stranice', href: '/admin/stranice', icon: <FileText size={16} /> },
-    { name: 'Popusti', href: '/admin/popusti', icon: <Tag size={16} /> },
+    { 
+      name: 'Popusti', 
+      icon: <Tag size={16} />,
+      sub: [
+        { name: 'Popusti', href: '/admin/popusti' },
+        { name: 'Newsletter', href: '/admin/newsletter' },
+      ]
+    },
     { name: 'Radovi', href: '/admin/radovi', icon: <FileStack size={16} /> },
-    { name: 'Newsletter', href: '/admin/newsletter', icon: <Mail size={16} /> },
-    { name: 'Logo', href: '/admin/logo', icon: <ImageIcon size={16} /> },
-    { name: 'Postavke', href: '/admin/postavke', icon: <Settings size={16} /> },
+    { 
+      name: 'Postavke', 
+      icon: <Settings size={16} />,
+      sub: [
+        { name: 'Logo', href: '/admin/logo' },
+        { name: 'Postavke', href: '/admin/postavke' },
+      ]
+    },
   ];
 
   return (
@@ -37,20 +55,36 @@ export default function AdminHeader({ logoutAction }: { logoutAction: () => Prom
           </Link>
           
           {/* Desktop Navigation */}
-          <nav className="ml-10 hidden md:flex space-x-4">
+          <nav className="ml-10 hidden md:flex space-x-2">
             {navigation.map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border transition-all text-sm font-medium ${
-                  pathname === item.href 
-                    ? 'bg-zinc-800 border-zinc-700 text-white' 
-                    : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-white'
-                }`}
-              >
-                {item.icon}
-                {item.name}
-              </Link>
+              item.sub ? (
+                <div key={item.name} className="relative group">
+                  <button className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-zinc-800 bg-zinc-900 text-zinc-400 hover:border-zinc-700 hover:text-white transition-all text-sm font-medium">
+                    {item.icon}
+                    {item.name}
+                  </button>
+                  <div className="absolute left-0 mt-2 w-48 bg-zinc-800 rounded-xl shadow-lg border border-zinc-700 p-2 hidden group-hover:block z-50">
+                    {item.sub.map((sub) => (
+                      <Link key={sub.name} href={sub.href} className="block px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-700 hover:text-white rounded-lg">
+                        {sub.name}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border transition-all text-sm font-medium ${
+                    pathname === item.href 
+                      ? 'bg-zinc-800 border-zinc-700 text-white' 
+                      : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-white'
+                  }`}
+                >
+                  {item.icon}
+                  {item.name}
+                </Link>
+              )
             ))}
           </nav>
         </div>
@@ -81,19 +115,42 @@ export default function AdminHeader({ logoutAction }: { logoutAction: () => Prom
         <div className="md:hidden bg-zinc-900 border-b border-zinc-800 pb-4 px-4">
           <nav className="flex flex-col space-y-2 mt-2">
             {navigation.map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                onClick={() => setIsOpen(false)}
-                className={`flex items-center gap-2 py-2 px-3 rounded-xl border transition-all text-base font-medium ${
-                  pathname === item.href
-                    ? 'bg-zinc-800 border-zinc-700 text-white'
-                    : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-white'
-                }`}
-              >
-                {item.icon}
-                {item.name}
-              </Link>
+              item.sub ? (
+                <div key={item.name} className="space-y-1">
+                  <div className="flex items-center gap-2 py-2 px-3 text-zinc-400 font-medium">
+                    {item.icon}
+                    {item.name}
+                  </div>
+                  {item.sub.map((sub) => (
+                    <Link
+                      key={sub.name}
+                      href={sub.href}
+                      onClick={() => setIsOpen(false)}
+                      className={`flex items-center gap-2 py-2 px-6 rounded-xl border transition-all text-base font-medium ${
+                        pathname === sub.href
+                          ? 'bg-zinc-800 border-zinc-700 text-white'
+                          : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-white'
+                      }`}
+                    >
+                      {sub.name}
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  onClick={() => setIsOpen(false)}
+                  className={`flex items-center gap-2 py-2 px-3 rounded-xl border transition-all text-base font-medium ${
+                    pathname === item.href
+                      ? 'bg-zinc-800 border-zinc-700 text-white'
+                      : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-white'
+                  }`}
+                >
+                  {item.icon}
+                  {item.name}
+                </Link>
+              )
             ))}
             <div className="pt-4 mt-4 border-t border-zinc-800">
               <form action={logoutAction}>
