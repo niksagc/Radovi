@@ -39,7 +39,7 @@ export default function DiscountBanner() {
 
   return (
     <div className="bg-pink-600 text-white text-center py-2 px-4 text-sm font-medium">
-      {discount.name}: <span className="font-bold bg-white text-pink-600 px-2 py-0.5 rounded">{discount.value}%</span> popusta!
+      {discount.value}% Popusta na {discount.name}: <span className="font-bold bg-white text-pink-600 px-2 py-0.5 rounded">{discount.code || 'KOD'}</span>
     </div>
   );
 }
