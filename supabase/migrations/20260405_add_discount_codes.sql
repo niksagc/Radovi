@@ -1,4 +1,14 @@
 -- Migration to add discount codes and tracking
+CREATE TABLE public.discount_templates (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name TEXT NOT NULL,
+  value INT NOT NULL,
+  expires_at TIMESTAMPTZ,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  is_main_banner BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE public.discount_codes (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   code TEXT NOT NULL UNIQUE,
@@ -20,6 +30,7 @@ CREATE TABLE public.used_discount_codes (
 );
 
 -- Enable RLS
+ALTER TABLE public.discount_templates ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.discount_codes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.used_discount_codes ENABLE ROW LEVEL SECURITY;
 
