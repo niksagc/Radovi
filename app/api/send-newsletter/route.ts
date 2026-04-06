@@ -41,10 +41,10 @@ export async function POST(req: Request) {
         
         // Save code to database
         const { error: insertError } = await supabase
-          .from('discount_codes')
+          .from('discounts')
           .insert({
             code: code,
-            discount_percent: 10, // Assuming 10% for newsletter
+            value: 10, // Assuming 10% for newsletter, changing discount_percent to value
             is_active: true
           });
 

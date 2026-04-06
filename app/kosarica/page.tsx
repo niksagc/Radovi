@@ -65,9 +65,9 @@ export default function CartPage() {
 
     // If not found in global, check user-specific discounts
     if (discountError || !discount) {
-      // Check discount_codes table
+      // Check discounts table
       const { data: codeDiscount, error: codeDiscountError } = await supabase
-        .from('discount_codes')
+        .from('discounts')
         .select('*')
         .eq('code', discountInput)
         .eq('is_active', true)
@@ -81,7 +81,7 @@ export default function CartPage() {
         }
         discount = {
           ...codeDiscount,
-          value: codeDiscount.discount_percent,
+          value: codeDiscount.value,
           name: 'Newsletter popust'
         };
       } else if (user) {
