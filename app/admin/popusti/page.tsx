@@ -18,6 +18,7 @@ export default function AdminDiscountsPage() {
 
   useEffect(() => {
     fetchTemplates();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchTemplates]);
 
   const deleteTemplate = async (id: number) => {
