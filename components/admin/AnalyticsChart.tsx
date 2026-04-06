@@ -11,7 +11,11 @@ interface AnalyticsChartProps {
 }
 
 export default function AnalyticsChart({ data }: AnalyticsChartProps) {
-  const isMounted = typeof window !== 'undefined';
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   if (!isMounted) {
     return <div className="h-[300px] w-full bg-zinc-50 animate-pulse rounded-xl" />;
