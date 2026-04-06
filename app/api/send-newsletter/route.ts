@@ -37,6 +37,7 @@ export async function POST(req: Request) {
       try {
         // Generate a code
         const code = generateDiscountCode();
+        console.log(`Generated code for ${user.email}: ${code}`);
         
         // Save code to database
         const { error: insertError } = await supabase

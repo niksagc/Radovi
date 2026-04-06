@@ -103,7 +103,7 @@ export default function AdminNewsletterPage() {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Greška pri slanju');
-      setMessage({ type: 'success', text: 'Newsletter poslan!' });
+      setMessage({ type: 'success', text: data.message || 'Newsletter poslan!' });
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message });
     } finally {
