@@ -44,7 +44,7 @@ export default async function Footer() {
             <div className="flex flex-wrap justify-center gap-6">
               <Link href="/p/o-nama" className="text-sm text-zinc-500 hover:text-indigo-600 transition-colors">O nama</Link>
               <Link href="/p/uvjeti-poslovanja" className="text-sm text-zinc-500 hover:text-indigo-600 transition-colors">Uvjeti poslovanja</Link>
-              {footerPages?.map(page => (
+              {footerPages?.map((page: { title: string; slug: string }) => (
                 <Link key={page.slug} href={`/p/${page.slug}`} className="text-sm text-zinc-500 hover:text-indigo-600 transition-colors">{page.title}</Link>
               ))}
               <Link href="/p/blog" className="text-sm text-zinc-500 hover:text-indigo-600 transition-colors">Blog</Link>
