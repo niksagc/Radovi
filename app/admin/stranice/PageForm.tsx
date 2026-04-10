@@ -19,6 +19,8 @@ export default function PageForm({ initialData }: { initialData?: any }) {
     slug: initialData?.slug || '',
     content: initialData?.content || '',
     is_published: initialData?.is_published ?? false,
+    show_in_header: initialData?.show_in_header ?? false,
+    show_in_footer: initialData?.show_in_footer ?? false,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -127,17 +129,43 @@ export default function PageForm({ initialData }: { initialData?: any }) {
           />
         </div>
 
-        <div className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            id="is_published"
-            checked={formData.is_published}
-            onChange={(e) => setFormData({ ...formData, is_published: e.target.checked })}
-            className="rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500"
-          />
-          <label htmlFor="is_published" className="text-sm font-medium text-zinc-700 cursor-pointer">
-            Objavi stranicu (učini vidljivom javno)
-          </label>
+        <div className="flex flex-wrap gap-4">
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="is_published"
+              checked={formData.is_published}
+              onChange={(e) => setFormData({ ...formData, is_published: e.target.checked })}
+              className="rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500"
+            />
+            <label htmlFor="is_published" className="text-sm font-medium text-zinc-700 cursor-pointer">
+              Objavi stranicu
+            </label>
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="show_in_header"
+              checked={formData.show_in_header}
+              onChange={(e) => setFormData({ ...formData, show_in_header: e.target.checked })}
+              className="rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500"
+            />
+            <label htmlFor="show_in_header" className="text-sm font-medium text-zinc-700 cursor-pointer">
+              Prikaži u gornjem izborniku
+            </label>
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="show_in_footer"
+              checked={formData.show_in_footer}
+              onChange={(e) => setFormData({ ...formData, show_in_footer: e.target.checked })}
+              className="rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500"
+            />
+            <label htmlFor="show_in_footer" className="text-sm font-medium text-zinc-700 cursor-pointer">
+              Prikaži u footeru
+            </label>
+          </div>
         </div>
       </div>
 

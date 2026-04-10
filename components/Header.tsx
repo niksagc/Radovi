@@ -26,7 +26,23 @@ export default function Header({ logoutAction, role }: { logoutAction?: () => Pr
     fetchAppSettings();
   }, [supabase]);
 
+  const [cmsPages, setCmsPages] = useState<any[]>([]);
+  useEffect(() => {
+    const fetchPages = async () => {
+      const { data, error } = await supabase
+        .from('pages')
+        .select('title, slug, show_in_header')
+        .eq('is_published', true)
+        .eq('show_in_header', true);
+      if (!error && data) {
+        setCmsPages(data);
+      }
+    };
+    fetchPages();
+  }, [supabase]);
+
   const publicNavigation = [
+    ...cmsPages.map(page => ({ name: page.title, href: `/p/${page.slug}`, icon: <BookOpen size={16} /> })),
     { name: 'Blog', href: '/p/blog', icon: <BookOpen size={16} /> },
     { name: 'Portfolio', href: '/portfolio', icon: <BookOpen size={16} /> },
     { name: 'O meni', href: '/o-meni', icon: <BookOpen size={16} /> },
@@ -36,6 +52,7 @@ export default function Header({ logoutAction, role }: { logoutAction?: () => Pr
   const privateNavigation = [
     { name: 'Moje narudžbe', href: '/dashboard', icon: <Package size={16} /> },
     { name: 'Katalog usluga', href: '/kategorije', icon: <LayoutGrid size={16} /> },
+    ...cmsPages.map(page => ({ name: page.title, href: `/p/${page.slug}`, icon: <BookOpen size={16} /> })),
     { name: 'Blog', href: '/p/blog', icon: <BookOpen size={16} /> },
     { name: 'Portfolio', href: '/portfolio', icon: <BookOpen size={16} /> },
     { name: 'Preporuči i zaradi', href: '/dashboard/preporuke', icon: <Share2 size={16} /> },
