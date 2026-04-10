@@ -48,7 +48,10 @@ export async function middleware(request: NextRequest) {
     user = data.user;
   } catch (error) {
     console.error('Middleware: Error getting user:', error);
-    // If refresh token is invalid, user will remain null and we proceed as unauthenticated
+    // Clear cookies if auth fails due to invalid refresh token
+    request.cookies.getAll().forEach((cookie) => {
+      supabaseResponse.cookies.delete(cookie.name);
+    });
   }
   console.log('Middleware: user found:', !!user, 'path:', request.nextUrl.pathname);
 

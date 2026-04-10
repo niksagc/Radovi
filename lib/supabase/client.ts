@@ -33,8 +33,21 @@ export function createClient() {
     } as any;
   }
 
-  return createBrowserClient(
+  const client = createBrowserClient(
     supabaseUrl,
     supabaseKey
   );
+
+  // Listen for auth state changes to handle session errors
+  client.auth.onAuthStateChange((event, session) => {
+    if (event === 'TOKEN_REFRESHED') {
+      // Token refreshed successfully
+    } else if (event === 'SIGNED_OUT') {
+      // User signed out
+    } else if (event === 'USER_UPDATED') {
+      // User updated
+    }
+  });
+
+  return client;
 }
