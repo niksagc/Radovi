@@ -55,62 +55,28 @@ export default function CartPage() {
   const handleApplyDiscount = async () => {
     setDiscountError('');
     
-    // Check global discounts
-    let { data: discount, error: discountError } = await supabase
-      .from('discounts')
-      .select('*')
-      .eq('code', discountInput)
-      .eq('is_active', true)
-      .single();
+    try {
+      const response = await fetch('/api/validate-discount', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          code: discountInput, 
+          userId: user?.id 
+        }),
+      });
 
-    // If not found in global, check user-specific discounts
-    if (discountError || !discount) {
-      // Check discounts table
-      const { data: codeDiscount, error: codeDiscountError } = await supabase
-        .from('discounts')
-        .select('*')
-        .eq('code', discountInput)
-        .eq('is_active', true)
-        .single();
-      
-      if (!codeDiscountError && codeDiscount) {
-        // Check expiry
-        if (codeDiscount.valid_until && new Date(codeDiscount.valid_until) < new Date()) {
-          setDiscountError('Kod je istekao.');
-          return;
-        }
-        discount = {
-          ...codeDiscount,
-          value: codeDiscount.value,
-          name: 'Newsletter popust'
-        };
-      } else if (user) {
-        const { data: userDiscount, error: userDiscountError } = await supabase
-          .from('user_discounts')
-          .select('*')
-          .eq('code', discountInput)
-          .eq('user_id', user.id)
-          .eq('is_used', false)
-          .single();
-          
-        if (!userDiscountError && userDiscount) {
-          // Check expiry
-          if (userDiscount.expires_at && new Date(userDiscount.expires_at) < new Date()) {
-            setDiscountError('Kod je istekao.');
-            return;
-          }
-          discount = userDiscount;
-        }
+      const result = await response.json();
+
+      if (!response.ok) {
+        setDiscountError(result.error || 'Nevažeći kod popusta.');
+        return;
       }
-    }
 
-    if (!discount) {
-      setDiscountError('Nevažeći kod popusta.');
-      return;
+      setAppliedDiscount(result.discount);
+      setDiscountInput('');
+    } catch (err) {
+      setDiscountError('Greška pri provjeri koda.');
     }
-
-    setAppliedDiscount(discount);
-    setDiscountInput('');
   };
 
   const discountAmountCents = appliedDiscount ? Math.round(totalCents * (appliedDiscount.value / 100)) : 0;

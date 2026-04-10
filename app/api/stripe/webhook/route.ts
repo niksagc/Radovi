@@ -62,6 +62,40 @@ export async function POST(request: Request) {
 
         console.log('Updating order status to:', newStatus);
         await supabase.from('orders').update({ status: newStatus }).eq('id', order.id);
+
+        // Mark discount as used if present
+        const discountCode = paymentIntent.metadata.discountCode;
+        const userId = paymentIntent.metadata.userId;
+        
+        if (discountCode && userId) {
+          console.log('Marking discount code as used:', discountCode, 'for user:', userId);
+          
+          // Check if it exists in user_discounts
+          const { data: existing } = await supabase
+            .from('user_discounts')
+            .select('id')
+            .eq('user_id', userId)
+            .eq('code', discountCode)
+            .maybeSingle();
+
+          if (existing) {
+            await supabase
+              .from('user_discounts')
+              .update({ is_used: true, used_at: new Date().toISOString() })
+              .eq('id', existing.id);
+          } else {
+            // If it's a global code, we might need to create a record to track its usage
+            await supabase
+              .from('user_discounts')
+              .insert({
+                user_id: userId,
+                code: discountCode,
+                is_used: true,
+                used_at: new Date().toISOString(),
+                value: 0 // We don't necessarily know the value here, but we track usage
+              });
+          }
+        }
       } else {
         console.error('Order not found for payment:', payment.id);
       }

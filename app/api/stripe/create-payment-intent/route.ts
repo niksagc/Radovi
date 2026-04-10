@@ -5,7 +5,7 @@ import { getStripe } from '@/lib/stripe';
 export async function POST(request: Request) {
   try {
     const stripe = getStripe();
-    const { orderId } = await request.json();
+    const { orderId, discountCode: bodyDiscountCode } = await request.json();
 
     const supabase = createAdminClient();
     const { data: order, error } = await supabase
@@ -17,6 +17,9 @@ export async function POST(request: Request) {
     if (error || !order) {
       return NextResponse.json({ error: 'Narudžba nije pronađena.' }, { status: 404 });
     }
+
+    // Use discount code from body if provided, otherwise check order (fallback)
+    const discountCode = bodyDiscountCode || (order as any).discount_code_used;
 
     const baseAmount = order.payment_model === '50-50' ? order.deposit_cents : order.total_cents;
 
@@ -79,6 +82,8 @@ export async function POST(request: Request) {
       metadata: {
         orderId: order.id,
         stage: order.payment_model === '50-50' ? 'deposit' : 'full',
+        discountCode: discountCode || undefined,
+        userId: order.student_id,
       },
     };
 

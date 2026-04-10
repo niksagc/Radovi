@@ -44,7 +44,7 @@ export async function POST(req: Request) {
           .from('discounts')
           .insert({
             code: code,
-            value: 10, // Assuming 10% for newsletter, changing discount_percent to value
+            value: 10,
             is_active: true
           });
 
@@ -53,6 +53,8 @@ export async function POST(req: Request) {
           errorCount++;
           continue;
         }
+        
+        console.log(`Successfully saved code ${code} for ${user.email}`);
         
         const personalizedHtml = html.replace('{{DISCOUNT_CODE}}', code);
         

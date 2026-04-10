@@ -103,10 +103,16 @@ export default function PaymentOptions({ order: initialOrder, appSettings }: { o
 
     setLoadingSecret(true);
     try {
+      const savedDiscount = localStorage.getItem(`appliedDiscount_${order.id}`);
+      const discountCode = savedDiscount ? JSON.parse(savedDiscount).code : undefined;
+
       const res = await fetch('/api/stripe/create-payment-intent', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderId: order.id }),
+        body: JSON.stringify({ 
+          orderId: order.id,
+          discountCode: discountCode
+        }),
       });
       const data = await res.json();
       if (data.clientSecret) {

@@ -20,7 +20,15 @@ export default function OrderForm({ profile }: { profile: any }) {
   const [referralDiscount, setReferralDiscount] = useState(0);
   const [referralMessage, setReferralMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
   const [useCredits, setUseCredits] = useState(false);
+  const [cartDiscount, setCartDiscount] = useState<any>(null);
   const creditsAvailable = profile?.credits_cents || 0;
+
+  useEffect(() => {
+    const savedDiscount = localStorage.getItem('appliedDiscount');
+    if (savedDiscount) {
+      setCartDiscount(JSON.parse(savedDiscount));
+    }
+  }, []);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -64,7 +72,10 @@ export default function OrderForm({ profile }: { profile: any }) {
       // 2. Calculate deposit/final
       // Default to 100% at creation, will be chosen at payment step
       
-      let finalTotal = totalCents() - referralDiscount;
+      const discountPercent = cartDiscount ? cartDiscount.value : 0;
+      const discountAmount = Math.round(totalCents() * (discountPercent / 100));
+      
+      let finalTotal = totalCents() - referralDiscount - discountAmount;
       let creditsUsed = 0;
       
       if (useCredits) {
@@ -183,6 +194,11 @@ export default function OrderForm({ profile }: { profile: any }) {
       setIsRedirecting(true);
       // 6. Clear cart and redirect to order details
       clearCart();
+      const savedDiscount = localStorage.getItem('appliedDiscount');
+      if (savedDiscount) {
+        localStorage.setItem(`appliedDiscount_${order.id}`, savedDiscount);
+        localStorage.removeItem('appliedDiscount');
+      }
       router.push(`/dashboard/narudzbe/${order.id}`);
 
     } catch (err: any) {
@@ -436,8 +452,14 @@ export default function OrderForm({ profile }: { profile: any }) {
           )}
 
           {/* Discounts Display */}
-          {(referralDiscount > 0 || useCredits) && (
+          {(referralDiscount > 0 || useCredits || cartDiscount) && (
             <div className="pt-4 border-t border-zinc-200 space-y-2">
+              {cartDiscount && (
+                <div className="flex justify-between text-green-600 text-sm">
+                  <span>Popust ({cartDiscount.code})</span>
+                  <span>-{(Math.round(totalCents() * (cartDiscount.value / 100)) / 100).toFixed(2)} €</span>
+                </div>
+              )}
               {referralDiscount > 0 && (
                 <div className="flex justify-between text-green-600 text-sm">
                   <span>Popust na preporuku</span>
@@ -457,7 +479,9 @@ export default function OrderForm({ profile }: { profile: any }) {
             <span className="text-lg font-bold text-zinc-900">Ukupno</span>
             <span className="text-2xl font-extrabold text-indigo-600">
               {(() => {
-                let total = totalCents() - referralDiscount;
+                const discountPercent = cartDiscount ? cartDiscount.value : 0;
+                const discountAmount = Math.round(totalCents() * (discountPercent / 100));
+                let total = totalCents() - referralDiscount - discountAmount;
                 if (useCredits) {
                   total -= Math.min(total, creditsAvailable);
                 }
