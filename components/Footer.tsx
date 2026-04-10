@@ -38,6 +38,7 @@ export default async function Footer() {
             <div className="flex flex-wrap justify-center gap-6">
               <Link href="/p/o-nama" className="text-sm text-zinc-500 hover:text-indigo-600 transition-colors">O nama</Link>
               <Link href="/p/uvjeti-poslovanja" className="text-sm text-zinc-500 hover:text-indigo-600 transition-colors">Uvjeti poslovanja</Link>
+              <Link href="/p/politika-privatnosti" className="text-sm text-zinc-500 hover:text-indigo-600 transition-colors">Politika privatnosti</Link>
               <Link href="/p/blog" className="text-sm text-zinc-500 hover:text-indigo-600 transition-colors">Blog</Link>
               <Link href="/kontakt" className="text-sm text-zinc-500 hover:text-indigo-600 transition-colors">Kontakt</Link>
             </div>
