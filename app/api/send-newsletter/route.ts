@@ -49,7 +49,7 @@ export async function POST(req: Request) {
           });
 
         if (insertError) {
-          console.error(`Error saving discount code for ${user.email}:`, insertError);
+          console.error(`Error saving discount code for ${user.email}:`, JSON.stringify(insertError, null, 2));
           errorCount++;
           continue;
         }
