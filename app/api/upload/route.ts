@@ -17,6 +17,7 @@ export async function POST(request: Request) {
     const file = formData.get('file') as File;
     const filePath = formData.get('filePath') as string;
     const bucket = formData.get('bucket') as string;
+    const isPublic = formData.get('isPublic') === 'true';
 
     if (!file || !filePath || !bucket) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -29,7 +30,7 @@ export async function POST(request: Request) {
     const exists = buckets?.find((b: any) => b.name === bucket);
     if (!exists) {
       await supabaseAdmin.storage.createBucket(bucket, {
-        public: false,
+        public: isPublic,
         fileSizeLimit: 10737418240, // 10GB
       });
     }

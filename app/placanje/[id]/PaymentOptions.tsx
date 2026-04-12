@@ -68,7 +68,7 @@ export default function PaymentOptions({ order: initialOrder, appSettings }: { o
 
   const getIconUrl = (path: string | null, fallback: string) => {
     if (!path) return fallback;
-    return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/orders/${path}`;
+    return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/site-assets/${path}`;
   };
 
   const updateOrderModel = async (model: '100%' | '50-50') => {

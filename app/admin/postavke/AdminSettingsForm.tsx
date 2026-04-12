@@ -23,7 +23,8 @@ export default function AdminSettingsForm({ initialSettings }: { initialSettings
     const formData = new FormData();
     formData.append('file', file);
     formData.append('filePath', filePath);
-    formData.append('bucket', 'orders'); // Changed from 'public' to 'orders'
+    formData.append('bucket', 'site-assets');
+    formData.append('isPublic', 'true');
 
     const res = await fetch('/api/upload', {
       method: 'POST',
@@ -294,7 +295,7 @@ export default function AdminSettingsForm({ initialSettings }: { initialSettings
                 {icon.current && (
                   <div className="w-10 h-10 bg-white rounded-lg border border-zinc-200 flex items-center justify-center p-1 overflow-hidden">
                     <img 
-                      src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/orders/${icon.current}`} 
+                      src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/site-assets/${icon.current}`} 
                       className="max-w-full max-h-full object-contain" 
                       alt={icon.label} 
                     />
