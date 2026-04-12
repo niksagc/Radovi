@@ -45,7 +45,7 @@ export default function Header({ logoutAction, role }: { logoutAction?: () => Pr
     ...cmsPages.map(page => ({ name: page.title, href: `/p/${page.slug}`, icon: <BookOpen size={16} /> })),
     { name: 'Blog', href: '/p/blog', icon: <BookOpen size={16} /> },
     { name: 'Portfolio', href: '/portfolio', icon: <BookOpen size={16} /> },
-    { name: 'O meni', href: '/o-meni', icon: <BookOpen size={16} /> },
+    { name: 'O nama', href: '/p/o-nama', icon: <BookOpen size={16} /> },
     { name: 'Kontakt', href: '/kontakt', icon: <BookOpen size={16} /> },
   ];
 

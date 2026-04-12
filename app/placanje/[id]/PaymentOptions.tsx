@@ -104,7 +104,16 @@ export default function PaymentOptions({ order: initialOrder, appSettings }: { o
     setLoadingSecret(true);
     try {
       const savedDiscount = localStorage.getItem(`appliedDiscount_${order.id}`);
-      const discountCode = savedDiscount ? JSON.parse(savedDiscount).code : undefined;
+      let discountCode = undefined;
+      
+      if (savedDiscount && savedDiscount !== 'null') {
+        try {
+          const parsed = JSON.parse(savedDiscount);
+          discountCode = parsed?.code;
+        } catch (e) {
+          console.error('Error parsing discount from localStorage', e);
+        }
+      }
 
       const res = await fetch('/api/stripe/create-payment-intent', {
         method: 'POST',

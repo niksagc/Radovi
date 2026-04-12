@@ -197,10 +197,10 @@ export default function OrderForm({ profile }: { profile: any }) {
       // 6. Clear cart and redirect to order details
       clearCart();
       const savedDiscount = localStorage.getItem('appliedDiscount');
-      if (savedDiscount) {
+      if (savedDiscount && savedDiscount !== 'null') {
         localStorage.setItem(`appliedDiscount_${order.id}`, savedDiscount);
-        localStorage.removeItem('appliedDiscount');
       }
+      localStorage.removeItem('appliedDiscount');
       router.push(`/dashboard/narudzbe/${order.id}`);
 
     } catch (err: any) {

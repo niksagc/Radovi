@@ -43,7 +43,11 @@ export default function CartPage() {
   }, [supabase]);
 
   useEffect(() => {
-    localStorage.setItem('appliedDiscount', JSON.stringify(appliedDiscount));
+    if (appliedDiscount) {
+      localStorage.setItem('appliedDiscount', JSON.stringify(appliedDiscount));
+    } else {
+      localStorage.removeItem('appliedDiscount');
+    }
   }, [appliedDiscount]);
 
   if (!mounted) return null;
