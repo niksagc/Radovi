@@ -64,6 +64,7 @@ export default function AdminSettingsForm({ initialSettings }: { initialSettings
       iban_recipient: formData.get('iban_recipient') as string,
       iban_number: formData.get('iban_number') as string,
       iban_bank: formData.get('iban_bank') as string,
+      phone: formData.get('phone') as string,
       facebook_url: formData.get('facebook_url') as string,
       instagram_url: formData.get('instagram_url') as string,
       cancellation_days: parseInt(formData.get('cancellation_days') as string, 10),
@@ -187,17 +188,29 @@ export default function AdminSettingsForm({ initialSettings }: { initialSettings
       </div>
 
       <div className="space-y-4">
-        <h3 className="text-sm font-bold text-zinc-900">IBAN Podaci za uplatu</h3>
+        <h3 className="text-sm font-bold text-zinc-900">Podaci za uplatu (IBAN / KEKS / Aircash)</h3>
         
-        <div>
-          <label className="block text-xs font-medium text-zinc-500 mb-1">Primatelj (Naziv tvrtke/obrta)</label>
-          <input
-            type="text"
-            name="iban_recipient"
-            defaultValue={initialSettings?.iban_recipient}
-            required
-            className="w-full rounded-xl border border-zinc-300 px-4 py-2 focus:ring-indigo-500 focus:border-indigo-500"
-          />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-medium text-zinc-500 mb-1">Primatelj (Naziv tvrtke/obrta)</label>
+            <input
+              type="text"
+              name="iban_recipient"
+              defaultValue={initialSettings?.iban_recipient}
+              required
+              className="w-full rounded-xl border border-zinc-300 px-4 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-zinc-500 mb-1">Broj mobitela (za KEKS Pay / Aircash)</label>
+            <input
+              type="text"
+              name="phone"
+              defaultValue={initialSettings?.phone}
+              className="w-full rounded-xl border border-zinc-300 px-4 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+              placeholder="091 234 5678"
+            />
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

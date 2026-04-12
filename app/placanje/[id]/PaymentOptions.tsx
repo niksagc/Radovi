@@ -56,13 +56,11 @@ function CheckoutForm({ clientSecret, orderId, amount }: { clientSecret: string,
 export default function PaymentOptions({ order: initialOrder, appSettings }: { order: any, appSettings: any }) {
   const [order, setOrder] = useState(initialOrder);
   const [paymentModel, setPaymentModel] = useState<'100%' | '50-50'>(initialOrder.payment_model);
-  const [method, setMethod] = useState<'card' | 'iban'>('card');
-  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [method, setMethod] = useState<'card' | 'iban' | 'keks' | 'aircash'>('card');
   const [amounts, setAmounts] = useState<{ base: number, total: number } | null>(null);
-  const [loadingSecret, setLoadingSecret] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [ibanProof, setIbanProof] = useState<File | null>(null);
-  const [ibanLoading, setIbanLoading] = useState(false);
-  const [ibanError, setIbanError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const supabase = createClient();
 
@@ -70,7 +68,6 @@ export default function PaymentOptions({ order: initialOrder, appSettings }: { o
 
   const updateOrderModel = async (model: '100%' | '50-50') => {
     setPaymentModel(model);
-    setClientSecret(null);
     setAmounts(null);
     
     const depositCents = model === '50-50' ? Math.floor(order.total_cents / 2) : order.total_cents;
@@ -92,16 +89,9 @@ export default function PaymentOptions({ order: initialOrder, appSettings }: { o
     }
   };
 
-  const handleCardSelect = async () => {
-    setMethod('card');
-    setIbanError(null);
-    
-    if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) {
-      setIbanError('Kartično plaćanje nije konfigurirano (nedostaje Stripe ključ). Molimo koristite IBAN uplatu.');
-      return;
-    }
-
-    setLoadingSecret(true);
+  const handleStripeCheckout = async () => {
+    setLoading(true);
+    setError(null);
     try {
       const savedDiscount = localStorage.getItem(`appliedDiscount_${order.id}`);
       let discountCode = undefined;
@@ -115,7 +105,7 @@ export default function PaymentOptions({ order: initialOrder, appSettings }: { o
         }
       }
 
-      const res = await fetch('/api/stripe/create-payment-intent', {
+      const res = await fetch('/api/stripe/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -124,48 +114,32 @@ export default function PaymentOptions({ order: initialOrder, appSettings }: { o
         }),
       });
 
-      let data;
-      const contentType = res.headers.get('content-type');
-      if (contentType && contentType.includes('application/json')) {
-        data = await res.json();
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
       } else {
-        const text = await res.text();
-        console.error('Non-JSON response from Stripe API:', text);
-        throw new Error(`Server je vratio neispravan odgovor (${res.status}).`);
-      }
-
-      if (data.clientSecret) {
-        setClientSecret(data.clientSecret);
-        setAmounts({ base: data.baseAmount, total: data.amountToPay });
-      } else if (data.error) {
-        setIbanError(`Greška kod kartičnog plaćanja: ${data.error}`);
+        throw new Error(data.error || 'Greška pri kreiranju sesije plaćanja.');
       }
     } catch (err: any) {
-      console.error('Failed to create payment intent', err);
-      setIbanError(err.message || 'Neuspjelo povezivanje sa Stripe servisom.');
+      console.error('Checkout error:', err);
+      setError(err.message || 'Neuspjelo povezivanje sa Stripe servisom.');
+      setLoading(false);
     }
-    setLoadingSecret(false);
   };
 
-  const handleIbanSelect = () => {
-    setMethod('iban');
-    setIbanError(null);
-  };
-
-  const handleIbanSubmit = async (e: React.FormEvent) => {
+  const handleManualSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!ibanProof) {
-      setIbanError('Molimo priložite potvrdu o uplati.');
+      setError('Molimo priložite potvrdu o uplati.');
       return;
     }
 
-    setIbanLoading(true);
-    setIbanError(null);
+    setLoading(true);
+    setError(null);
 
     try {
-      // Upload proof
       const fileExt = ibanProof.name.split('.').pop();
-      const fileName = `iban_proof_${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+      const fileName = `${method}_proof_${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
       const filePath = `${order.id}/payments/${fileName}`;
 
       const formData = new FormData();
@@ -183,10 +157,9 @@ export default function PaymentOptions({ order: initialOrder, appSettings }: { o
         throw new Error(errorData.error || 'Greška pri prijenosu potvrde');
       }
 
-      // Create payment record
       const { error: dbError } = await supabase.from('payments').insert({
         order_id: order.id,
-        method: 'iban',
+        method: method === 'iban' ? 'iban' : 'card', // We treat Keks/Aircash as manual card/mobile payments
         stage: order.payment_model === '50-50' ? 'deposit' : 'full',
         amount_cents: amountToPay,
         status: 'pending',
@@ -196,14 +169,12 @@ export default function PaymentOptions({ order: initialOrder, appSettings }: { o
 
       if (dbError) throw dbError;
 
-      // Update order status
       await supabase.from('orders').update({ status: 'Čeka uplatu' }).eq('id', order.id);
-
-      router.push(`/dashboard/narudzbe/${order.id}?payment=iban_submitted`);
+      router.push(`/dashboard/narudzbe/${order.id}?payment=${method}_submitted`);
     } catch (err: any) {
-      console.error('IBAN error:', err);
-      setIbanError(err.message || 'Došlo je do pogreške.');
-      setIbanLoading(false);
+      console.error('Manual payment error:', err);
+      setError(err.message || 'Došlo je do pogreške.');
+      setLoading(false);
     }
   };
 
@@ -244,113 +215,128 @@ export default function PaymentOptions({ order: initialOrder, appSettings }: { o
       <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-zinc-200">
         <h2 className="text-xl font-bold text-zinc-900 mb-6">Odaberite način plaćanja</h2>
         
-        <div className="flex flex-col md:flex-row space-y-3 md:space-y-0 md:space-x-4 mb-8">
-        <button
-          onClick={handleCardSelect}
-          className={`w-full md:flex-1 py-3 px-4 rounded-xl font-medium text-sm transition-colors border flex items-center justify-center space-x-2 ${
-            method === 'card' 
-              ? 'bg-indigo-50 border-indigo-200 text-indigo-700' 
-              : 'bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50'
-          }`}
-        >
-          <span>Kartična naplata</span>
-        </button>
-        <button
-          onClick={handleIbanSelect}
-          className={`w-full md:flex-1 py-3 px-4 rounded-xl font-medium text-sm transition-colors border flex items-center justify-center space-x-2 ${
-            method === 'iban' 
-              ? 'bg-indigo-50 border-indigo-200 text-indigo-700' 
-              : 'bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50'
-          }`}
-        >
-          <span>Bankovna uplata (IBAN)</span>
-        </button>
-      </div>
-
-      {ibanError && method === 'card' && (
-        <div className="mb-6 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm">
-          {ibanError}
-        </div>
-      )}
-
-      {method === 'card' && (
-        <div>
-          {!clientSecret && !loadingSecret && (
-            <button 
-              onClick={handleCardSelect}
-              className="w-full py-4 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-colors shadow-sm text-lg"
-            >
-              Učitaj kartično plaćanje
-            </button>
-          )}
-          {loadingSecret && <p className="text-center text-zinc-500">Učitavanje...</p>}
-          {clientSecret && amounts && (
-            <div className="mb-6 bg-indigo-50 border border-indigo-100 p-4 rounded-xl text-sm text-indigo-900">
-              <div className="flex justify-between mb-1">
-                <span>Osnovni iznos:</span>
-                <span>{(amounts.base / 100).toFixed(2)} €</span>
-              </div>
-              <div className="flex justify-between mb-1">
-                <span>Stripe naknada (2.9% + 0.30€):</span>
-                <span>{((amounts.total - amounts.base) / 100).toFixed(2)} €</span>
-              </div>
-              <div className="flex justify-between font-bold pt-2 border-t border-indigo-200">
-                <span>Ukupno za platiti:</span>
-                <span>{(amounts.total / 100).toFixed(2)} €</span>
-              </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+          <button
+            onClick={() => { setMethod('card'); setError(null); }}
+            className={`py-3 px-2 rounded-xl font-medium text-xs transition-colors border flex flex-col items-center justify-center space-y-2 ${
+              method === 'card' ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50'
+            }`}
+          >
+            <div className="flex space-x-1">
+              <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" className="h-3" alt="Visa" />
+              <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" className="h-3" alt="Mastercard" />
             </div>
-          )}
-          {clientSecret && (
-            <Elements 
-              options={{ 
-                clientSecret, 
-                appearance: { theme: 'stripe' },
-              }} 
-              stripe={stripePromise}
-            >
-              <CheckoutForm clientSecret={clientSecret} orderId={order.id} amount={amounts?.total || amountToPay} />
-            </Elements>
-          )}
-        </div>
-      )}
-
-      {method === 'iban' && (
-        <form onSubmit={handleIbanSubmit} className="space-y-6">
-          <div className="bg-zinc-50 p-6 rounded-xl border border-zinc-200">
-            <h3 className="font-bold text-zinc-900 mb-4">Podaci za uplatu</h3>
-            <div className="space-y-2 text-sm text-zinc-700">
-              <p><span className="font-medium">Primatelj:</span> {appSettings?.iban_recipient}</p>
-              <p><span className="font-medium">IBAN:</span> {appSettings?.iban_number}</p>
-              <p><span className="font-medium">Banka:</span> {appSettings?.iban_bank}</p>
-              <p><span className="font-medium">Iznos:</span> {(amountToPay / 100).toFixed(2)} €</p>
-              <p><span className="font-medium">Poziv na broj:</span> {new Date(order.created_at).toLocaleDateString('hr-HR').replace(/\./g, '')}</p>
-              <p><span className="font-medium">Opis plaćanja:</span> Narudžba od {new Date(order.created_at).toLocaleDateString('hr-HR')}</p>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-zinc-700 mb-2">
-              Priložite potvrdu o uplati (PDF, JPG, PNG)
-            </label>
-            <input
-              type="file"
-              accept=".pdf,.jpg,.jpeg,.png"
-              onChange={(e) => setIbanProof(e.target.files?.[0] || null)}
-              className="w-full text-sm text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
-            />
-          </div>
-
-          {ibanError && <div className="text-red-500 text-sm">{ibanError}</div>}
+            <span>Kartica / GPay / Apple Pay</span>
+          </button>
+          
+          <button
+            onClick={() => { setMethod('iban'); setError(null); }}
+            className={`py-3 px-2 rounded-xl font-medium text-xs transition-colors border flex flex-col items-center justify-center space-y-2 ${
+              method === 'iban' ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50'
+            }`}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" /></svg>
+            <span>IBAN Uplata</span>
+          </button>
 
           <button
-            type="submit"
-            disabled={ibanLoading || !ibanProof}
-            className="w-full py-4 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-colors shadow-sm text-lg disabled:opacity-70"
+            onClick={() => { setMethod('keks'); setError(null); }}
+            className={`py-3 px-2 rounded-xl font-medium text-xs transition-colors border flex flex-col items-center justify-center space-y-2 ${
+              method === 'keks' ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50'
+            }`}
           >
-            {ibanLoading ? 'Slanje...' : 'Pošalji potvrdu o uplati'}
+            <div className="w-5 h-5 bg-red-600 rounded-full flex items-center justify-center text-[10px] text-white font-bold">K</div>
+            <span>KEKS Pay</span>
           </button>
-        </form>
-      )}
+
+          <button
+            onClick={() => { setMethod('aircash'); setError(null); }}
+            className={`py-3 px-2 rounded-xl font-medium text-xs transition-colors border flex flex-col items-center justify-center space-y-2 ${
+              method === 'aircash' ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50'
+            }`}
+          >
+            <div className="w-5 h-5 bg-indigo-600 rounded-full flex items-center justify-center text-[10px] text-white font-bold">A</div>
+            <span>Aircash</span>
+          </button>
+        </div>
+
+        {error && (
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm">
+            {error}
+          </div>
+        )}
+
+        {method === 'card' && (
+          <div className="space-y-6">
+            <div className="p-6 bg-zinc-50 rounded-2xl border border-zinc-200 text-center">
+              <p className="text-zinc-600 mb-6 text-sm">
+                Bit ćete preusmjereni na sigurnu Stripe stranicu za plaćanje gdje možete koristiti kartice, Google Pay, Apple Pay ili PayPal.
+              </p>
+              <div className="flex justify-center space-x-4 mb-8 grayscale opacity-50">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" className="h-6" alt="Visa" />
+                <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" className="h-6" alt="Mastercard" />
+                <img src="https://upload.wikimedia.org/wikipedia/commons/c/c7/Google_Pay_Logo.svg" className="h-6" alt="Google Pay" />
+                <img src="https://upload.wikimedia.org/wikipedia/commons/b/b0/Apple_Pay_logo.svg" className="h-6" alt="Apple Pay" />
+              </div>
+              <button 
+                onClick={handleStripeCheckout}
+                disabled={loading}
+                className="w-full py-4 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-colors shadow-sm text-lg disabled:opacity-70"
+              >
+                {loading ? 'Učitavanje...' : 'Nastavi na sigurno plaćanje'}
+              </button>
+            </div>
+            <p className="text-center text-xs text-zinc-400">
+              Powered by <span className="font-bold">stripe</span>
+            </p>
+          </div>
+        )}
+
+        {(method === 'iban' || method === 'keks' || method === 'aircash') && (
+          <form onSubmit={handleManualSubmit} className="space-y-6">
+            <div className="bg-zinc-50 p-6 rounded-xl border border-zinc-200">
+              <h3 className="font-bold text-zinc-900 mb-4">
+                {method === 'iban' ? 'Podaci za IBAN uplatu' : method === 'keks' ? 'Podaci za KEKS Pay' : 'Podaci za Aircash'}
+              </h3>
+              <div className="space-y-2 text-sm text-zinc-700">
+                {method === 'iban' ? (
+                  <>
+                    <p><span className="font-medium">Primatelj:</span> {appSettings?.iban_recipient}</p>
+                    <p><span className="font-medium">IBAN:</span> {appSettings?.iban_number}</p>
+                    <p><span className="font-medium">Banka:</span> {appSettings?.iban_bank}</p>
+                  </>
+                ) : (
+                  <>
+                    <p><span className="font-medium">Primatelj:</span> {appSettings?.iban_recipient}</p>
+                    <p><span className="font-medium">Broj mobitela:</span> {appSettings?.phone || '091 234 5678'}</p>
+                  </>
+                )}
+                <p><span className="font-medium">Iznos:</span> {(amountToPay / 100).toFixed(2)} €</p>
+                <p><span className="font-medium">Poziv na broj:</span> {new Date(order.created_at).toLocaleDateString('hr-HR').replace(/\./g, '')}</p>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-zinc-700 mb-2">
+                Priložite potvrdu o uplati (PDF, JPG, PNG)
+              </label>
+              <input
+                type="file"
+                accept=".pdf,.jpg,.jpeg,.png"
+                onChange={(e) => setIbanProof(e.target.files?.[0] || null)}
+                className="w-full text-sm text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading || !ibanProof}
+              className="w-full py-4 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-colors shadow-sm text-lg disabled:opacity-70"
+            >
+              {loading ? 'Slanje...' : 'Pošalji potvrdu o uplati'}
+            </button>
+          </form>
+        )}
       </div>
     </div>
   );

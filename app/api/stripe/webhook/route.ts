@@ -27,35 +27,44 @@ export async function POST(request: Request) {
 
   console.log('Webhook event type:', event.type);
 
-  if (event.type === 'payment_intent.succeeded') {
-    const paymentIntent = event.data.object as Stripe.PaymentIntent;
-    const orderId = paymentIntent.metadata.orderId;
-    const stage = paymentIntent.metadata.stage;
-    const userId = paymentIntent.metadata.userId;
-    const discountCode = paymentIntent.metadata.discountCode;
-
-    console.log('Processing successful payment for Order:', orderId, 'Stage:', stage);
+  if (event.type === 'payment_intent.succeeded' || event.type === 'checkout.session.completed') {
+    const object = event.data.object as any;
     
+    // For checkout session, we get metadata from the session object
+    // For payment intent, we get it from the payment intent object
+    const metadata = object.metadata || {};
+    const orderId = metadata.orderId;
+    const stage = metadata.stage;
+    const userId = metadata.userId;
+    const discountCode = metadata.discountCode;
+    const paymentIntentId = event.type === 'checkout.session.completed' ? object.payment_intent : object.id;
+    const amount = event.type === 'checkout.session.completed' ? object.amount_total : object.amount;
+
+    console.log('Processing successful payment for Order:', orderId, 'Stage:', stage, 'Event:', event.type);
+    
+    if (!orderId) {
+      console.error('No orderId found in metadata for event:', event.id);
+      return NextResponse.json({ received: true });
+    }
+
     // 1. Update or Create payment record
     const { data: payment, error: paymentError } = await supabase
       .from('payments')
       .update({ status: 'succeeded' })
-      .eq('stripe_payment_intent_id', paymentIntent.id)
+      .eq('stripe_payment_intent_id', paymentIntentId)
       .select()
       .single();
 
     if (paymentError || !payment) {
       console.log('Payment record not found, creating one now...');
-      // If payment record doesn't exist (race condition), create it
       await supabase.from('payments').insert({
         order_id: orderId,
         method: 'card',
         stage: stage || 'full',
-        amount_cents: paymentIntent.amount,
+        amount_cents: amount,
         status: 'succeeded',
-        stripe_payment_intent_id: paymentIntent.id,
-        stripe_customer_id: paymentIntent.customer as string,
-        stripe_payment_method_id: paymentIntent.payment_method as string,
+        stripe_payment_intent_id: paymentIntentId,
+        stripe_customer_id: object.customer as string,
       });
     }
 
