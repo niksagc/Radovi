@@ -114,16 +114,26 @@ export default function PaymentOptions({ order: initialOrder, appSettings }: { o
           discountCode: discountCode
         }),
       });
-      const data = await res.json();
+
+      let data;
+      const contentType = res.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        data = await res.json();
+      } else {
+        const text = await res.text();
+        console.error('Non-JSON response from Stripe API:', text);
+        throw new Error(`Server je vratio neispravan odgovor (${res.status}).`);
+      }
+
       if (data.clientSecret) {
         setClientSecret(data.clientSecret);
         setAmounts({ base: data.baseAmount, total: data.amountToPay });
       } else if (data.error) {
         setIbanError(`Greška kod kartičnog plaćanja: ${data.error}`);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to create payment intent', err);
-      setIbanError('Neuspjelo povezivanje sa Stripe servisom.');
+      setIbanError(err.message || 'Neuspjelo povezivanje sa Stripe servisom.');
     }
     setLoadingSecret(false);
   };

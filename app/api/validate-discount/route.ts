@@ -10,9 +10,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Kod je obavezan' }, { status: 400 });
     }
 
-    // 1. Check global discounts table
+    // 1. Check global discounts table (discount_codes)
     const { data: globalDiscount, error: globalError } = await supabase
-      .from('discounts')
+      .from('discount_codes')
       .select('*')
       .eq('code', code)
       .eq('is_active', true)
@@ -34,12 +34,21 @@ export async function POST(req: Request) {
         }
       }
       
+      // Check validity dates
+      const now = new Date();
+      if (globalDiscount.valid_from && new Date(globalDiscount.valid_from) > now) {
+        return NextResponse.json({ error: 'Kod još nije aktivan.' }, { status: 400 });
+      }
+      if (globalDiscount.valid_until && new Date(globalDiscount.valid_until) < now) {
+        return NextResponse.json({ error: 'Kod je istekao.' }, { status: 400 });
+      }
+
       return NextResponse.json({ 
         valid: true, 
         discount: {
           id: globalDiscount.id,
           code: globalDiscount.code,
-          value: globalDiscount.value,
+          value: globalDiscount.discount_percent,
           type: 'global'
         } 
       });
@@ -53,6 +62,7 @@ export async function POST(req: Request) {
         .eq('code', code)
         .eq('user_id', userId)
         .eq('is_used', false)
+        .eq('is_active', true)
         .single();
 
       if (userDiscount) {

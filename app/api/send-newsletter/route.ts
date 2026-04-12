@@ -41,11 +41,12 @@ export async function POST(req: Request) {
         
         // Save code to database
         const { error: insertError } = await supabase
-          .from('discounts')
+          .from('user_discounts')
           .insert({
             code: code,
             value: 10,
-            is_active: true
+            is_active: true,
+            email: user.email
           });
 
         if (insertError) {

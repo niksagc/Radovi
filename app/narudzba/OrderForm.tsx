@@ -108,6 +108,8 @@ export default function OrderForm({ profile }: { profile: any }) {
           payment_model: '100%',
           deposit_cents: depositCents,
           final_cents: finalCents,
+          discount_code_used: cartDiscount ? cartDiscount.code : null,
+          discount_amount_cents: discountAmount,
           referral_code_used: referralDiscount > 0 ? referralCode : null,
           referral_discount_cents: referralDiscount,
           credits_used_cents: creditsUsed,

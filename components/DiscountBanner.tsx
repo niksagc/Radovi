@@ -63,8 +63,8 @@ export default function DiscountBanner() {
   // Hide conditions
   if (loading || !discount || isUsed) return null;
   
-  // Don't show on login or admin pages
-  if (pathname === '/login' || pathname?.startsWith('/admin')) {
+  // Don't show on login, register or admin pages
+  if (pathname === '/login' || pathname === '/register' || pathname?.startsWith('/admin')) {
     return null;
   }
 

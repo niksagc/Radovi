@@ -112,7 +112,10 @@ export async function POST(request: Request) {
       amountToPay,
     });
   } catch (err: any) {
-    console.error('Stripe error:', err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    console.error('Stripe error details:', err);
+    return NextResponse.json({ 
+      error: err.message || 'Došlo je do nepoznate greške na Stripe poslužitelju.',
+      details: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    }, { status: 500 });
   }
 }
