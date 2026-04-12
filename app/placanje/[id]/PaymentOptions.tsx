@@ -223,8 +223,8 @@ export default function PaymentOptions({ order: initialOrder, appSettings }: { o
             }`}
           >
             <div className="flex space-x-1">
-              <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" className="h-3" alt="Visa" />
-              <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" className="h-3" alt="Mastercard" />
+              <img src="https://cdn.jsdelivr.net/gh/pajasevi/payment-icons/svg/visa.svg" className="h-4" alt="Visa" referrerPolicy="no-referrer" />
+              <img src="https://cdn.jsdelivr.net/gh/pajasevi/payment-icons/svg/mastercard.svg" className="h-4" alt="Mastercard" referrerPolicy="no-referrer" />
             </div>
             <span>Kartica / GPay / Apple Pay</span>
           </button>
@@ -245,7 +245,7 @@ export default function PaymentOptions({ order: initialOrder, appSettings }: { o
               method === 'keks' ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50'
             }`}
           >
-            <img src="https://www.erstebank.hr/content/dam/hr/eb/www_erstebank_hr/slike/keks-pay/keks-pay-logo.png" className="h-5 object-contain" alt="KEKS Pay" />
+            <img src="https://kekspay.hr/wp-content/uploads/2018/12/keks-pay-logo.png" className="h-5 object-contain" alt="KEKS Pay" referrerPolicy="no-referrer" />
             <span>KEKS Pay</span>
           </button>
 
@@ -255,7 +255,7 @@ export default function PaymentOptions({ order: initialOrder, appSettings }: { o
               method === 'aircash' ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50'
             }`}
           >
-            <img src="https://aircash.eu/wp-content/uploads/2021/03/aircash-logo-new.png" className="h-5 object-contain" alt="Aircash" />
+            <img src="https://aircash.eu/wp-content/uploads/2021/03/aircash-logo-new.png" className="h-5 object-contain" alt="Aircash" referrerPolicy="no-referrer" />
             <span>Aircash</span>
           </button>
         </div>
@@ -272,11 +272,11 @@ export default function PaymentOptions({ order: initialOrder, appSettings }: { o
               <p className="text-zinc-600 mb-6 text-sm">
                 Bit ćete preusmjereni na sigurnu Stripe stranicu za plaćanje gdje možete koristiti kartice, Google Pay, Apple Pay ili PayPal.
               </p>
-              <div className="flex justify-center space-x-4 mb-8 grayscale opacity-50">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" className="h-6" alt="Visa" />
-                <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" className="h-6" alt="Mastercard" />
-                <img src="https://upload.wikimedia.org/wikipedia/commons/c/c7/Google_Pay_Logo.svg" className="h-6" alt="Google Pay" />
-                <img src="https://upload.wikimedia.org/wikipedia/commons/b/b0/Apple_Pay_logo.svg" className="h-6" alt="Apple Pay" />
+              <div className="flex justify-center items-center space-x-4 mb-8 grayscale opacity-50">
+                <img src="https://cdn.jsdelivr.net/gh/pajasevi/payment-icons/svg/visa.svg" className="h-6" alt="Visa" referrerPolicy="no-referrer" />
+                <img src="https://cdn.jsdelivr.net/gh/pajasevi/payment-icons/svg/mastercard.svg" className="h-6" alt="Mastercard" referrerPolicy="no-referrer" />
+                <img src="https://cdn.jsdelivr.net/gh/pajasevi/payment-icons/svg/google-pay.svg" className="h-6" alt="Google Pay" referrerPolicy="no-referrer" />
+                <img src="https://cdn.jsdelivr.net/gh/pajasevi/payment-icons/svg/apple-pay.svg" className="h-6" alt="Apple Pay" referrerPolicy="no-referrer" />
               </div>
               <button 
                 onClick={handleStripeCheckout}
