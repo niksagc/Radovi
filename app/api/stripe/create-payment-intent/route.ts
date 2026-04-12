@@ -46,9 +46,8 @@ export async function POST(request: Request) {
     let customerId = profile?.stripe_customer_id;
     console.log('Found customerId in profile:', customerId);
 
-    if (!customerId && profile) {
+    const createNewCustomer = async () => {
       console.log('Creating new Stripe Customer for:', profile.email);
-      // Create a new Stripe Customer if missing
       const customer = await stripe.customers.create({
         email: profile.email,
         name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || profile.email,
@@ -56,43 +55,68 @@ export async function POST(request: Request) {
           supabase_uid: order.student_id,
         },
       });
-      customerId = customer.id;
-      console.log('New Stripe Customer created:', customerId);
-
-      // Update profile with stripe_customer_id
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ stripe_customer_id: customerId })
-        .eq('id', order.student_id);
       
-      if (updateError) {
-        console.error('Error updating profile with new customerId:', updateError);
-      }
+      // Update profile with stripe_customer_id
+      await supabase
+        .from('profiles')
+        .update({ stripe_customer_id: customer.id })
+        .eq('id', order.student_id);
+        
+      return customer.id;
+    };
+
+    if (!customerId && profile) {
+      customerId = await createNewCustomer();
     }
 
     // Create a PaymentIntent with the order amount and currency
-    const paymentIntentOptions: any = {
-      amount: amountToPay,
-      currency: 'eur',
-      customer: customerId || undefined,
-      setup_future_usage: 'off_session',
-      automatic_payment_methods: {
-        enabled: true,
-      },
-      metadata: {
-        orderId: order.id,
-        stage: order.payment_model === '50-50' ? 'deposit' : 'full',
-        discountCode: discountCode || undefined,
-        userId: order.student_id,
-      },
-    };
+    let paymentIntent;
+    try {
+      const paymentIntentOptions: any = {
+        amount: amountToPay,
+        currency: 'eur',
+        customer: customerId || undefined,
+        setup_future_usage: 'off_session',
+        automatic_payment_methods: {
+          enabled: true,
+        },
+        metadata: {
+          orderId: order.id,
+          stage: order.payment_model === '50-50' ? 'deposit' : 'full',
+          discountCode: discountCode || undefined,
+          userId: order.student_id,
+        },
+      };
 
-    // If we have a customer, we can also use the 'save_payment_method' preference
-    // but automatic_payment_methods usually handles this if customer is present.
-    
-    console.log('Stripe PaymentIntent options:', JSON.stringify(paymentIntentOptions, null, 2));
+      console.log('Stripe PaymentIntent options:', JSON.stringify(paymentIntentOptions, null, 2));
+      paymentIntent = await stripe.paymentIntents.create(paymentIntentOptions);
+    } catch (paymentError: any) {
+      // If customer doesn't exist in Stripe (e.g. switched from test to live or deleted)
+      if (paymentError.message?.includes('No such customer') || paymentError.code === 'resource_missing') {
+        console.log('Customer ID was invalid, creating new one and retrying...');
+        customerId = await createNewCustomer();
+        
+        // Retry PaymentIntent creation with new customerId
+        paymentIntent = await stripe.paymentIntents.create({
+          amount: amountToPay,
+          currency: 'eur',
+          customer: customerId,
+          setup_future_usage: 'off_session',
+          automatic_payment_methods: {
+            enabled: true,
+          },
+          metadata: {
+            orderId: order.id,
+            stage: order.payment_model === '50-50' ? 'deposit' : 'full',
+            discountCode: discountCode || undefined,
+            userId: order.student_id,
+          },
+        });
+      } else {
+        throw paymentError;
+      }
+    }
 
-    const paymentIntent = await stripe.paymentIntents.create(paymentIntentOptions);
     console.log('PaymentIntent created successfully:', paymentIntent.id);
 
 
