@@ -29,48 +29,73 @@ export async function POST(request: Request) {
 
   if (event.type === 'payment_intent.succeeded') {
     const paymentIntent = event.data.object as Stripe.PaymentIntent;
+    const orderId = paymentIntent.metadata.orderId;
+    const stage = paymentIntent.metadata.stage;
+    const userId = paymentIntent.metadata.userId;
+    const discountCode = paymentIntent.metadata.discountCode;
+
+    console.log('Processing successful payment for Order:', orderId, 'Stage:', stage);
     
-    // Update payment record
-    const { data: payment } = await supabase
+    // 1. Update or Create payment record
+    const { data: payment, error: paymentError } = await supabase
       .from('payments')
       .update({ status: 'succeeded' })
       .eq('stripe_payment_intent_id', paymentIntent.id)
       .select()
       .single();
 
-    if (payment) {
-      console.log('Payment updated, processing order status update for order:', payment.order_id, 'Stage:', payment.stage);
-      // Update order status
+    if (paymentError || !payment) {
+      console.log('Payment record not found, creating one now...');
+      // If payment record doesn't exist (race condition), create it
+      await supabase.from('payments').insert({
+        order_id: orderId,
+        method: 'card',
+        stage: stage || 'full',
+        amount_cents: paymentIntent.amount,
+        status: 'succeeded',
+        stripe_payment_intent_id: paymentIntent.id,
+        stripe_customer_id: paymentIntent.customer as string,
+        stripe_payment_method_id: paymentIntent.payment_method as string,
+      });
+    }
+
+    // 2. Update order status
+    if (orderId) {
       const { data: order } = await supabase
         .from('orders')
         .select('*')
-        .eq('id', payment.order_id)
+        .eq('id', orderId)
         .single();
 
       if (order) {
         console.log('Order found, current status:', order.status);
         let newStatus = order.status;
-        if (payment.stage === 'deposit') {
+        
+        // Determine new status based on stage
+        if (stage === 'deposit') {
           newStatus = 'Uplaćen depozit - U izradi';
-        } else if (payment.stage === 'full') {
+        } else if (stage === 'full') {
           newStatus = 'U izradi';
-        } else if (payment.stage === 'final') {
+        } else if (stage === 'final') {
           newStatus = 'Završeno';
           // Unlock files
           await supabase.from('files').update({ is_locked: false }).eq('order_id', order.id);
         }
 
         console.log('Updating order status to:', newStatus);
-        await supabase.from('orders').update({ status: newStatus }).eq('id', order.id);
+        const { error: updateError } = await supabase
+          .from('orders')
+          .update({ status: newStatus })
+          .eq('id', order.id);
+          
+        if (updateError) {
+          console.error('Error updating order status:', updateError);
+        }
 
-        // Mark discount as used if present
-        const discountCode = paymentIntent.metadata.discountCode;
-        const userId = paymentIntent.metadata.userId;
-        
+        // 3. Mark discount as used if present
         if (discountCode && userId) {
           console.log('Marking discount code as used:', discountCode, 'for user:', userId);
           
-          // Check if it exists in user_discounts
           const { data: existing } = await supabase
             .from('user_discounts')
             .select('id')
@@ -84,7 +109,6 @@ export async function POST(request: Request) {
               .update({ is_used: true, used_at: new Date().toISOString() })
               .eq('id', existing.id);
           } else {
-            // If it's a global code, we might need to create a record to track its usage
             await supabase
               .from('user_discounts')
               .insert({
@@ -92,15 +116,13 @@ export async function POST(request: Request) {
                 code: discountCode,
                 is_used: true,
                 used_at: new Date().toISOString(),
-                value: 0 // We don't necessarily know the value here, but we track usage
+                value: 0
               });
           }
         }
       } else {
-        console.error('Order not found for payment:', payment.id);
+        console.error('Order not found for ID:', orderId);
       }
-    } else {
-      console.error('Payment record not found for payment intent:', paymentIntent.id);
     }
   } else if (event.type === 'payment_intent.payment_failed') {
     const paymentIntent = event.data.object as Stripe.PaymentIntent;
