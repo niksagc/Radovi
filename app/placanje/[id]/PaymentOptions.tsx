@@ -71,6 +71,18 @@ export default function PaymentOptions({ order: initialOrder, appSettings }: { o
     return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/site-assets/${path}`;
   };
 
+  const generatePaymentDescription = () => {
+    const itemNames = Array.from(new Set(order.order_items?.map((item: any) => item.name) || [])) as string[];
+    const addonNames = Array.from(new Set(order.order_addons?.map((item: any) => item.name) || [])) as string[];
+    
+    let description = itemNames.join(' + ');
+    if (addonNames.length > 0) {
+      description += (description ? ' + ' : '') + addonNames.join(' + ');
+    }
+    
+    return description || `Narudžba #${order.id.substring(0, 8)}`;
+  };
+
   const updateOrderModel = async (model: '100%' | '50-50') => {
     setPaymentModel(model);
     setAmounts(null);
@@ -317,6 +329,7 @@ export default function PaymentOptions({ order: initialOrder, appSettings }: { o
                   </>
                 )}
                 <p><span className="font-medium">Iznos:</span> {(amountToPay / 100).toFixed(2)} €</p>
+                <p><span className="font-medium">Opis plaćanja:</span> {generatePaymentDescription()}</p>
                 <p><span className="font-medium">Poziv na broj:</span> {new Date(order.created_at).toLocaleDateString('hr-HR').replace(/\./g, '')}</p>
               </div>
             </div>
