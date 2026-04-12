@@ -15,6 +15,29 @@ export default function AdminSettingsForm({ initialSettings }: { initialSettings
   const [testEmailSuccess, setTestEmailSuccess] = useState<string | null>(null);
   const [testEmailError, setTestEmailError] = useState<string | null>(null);
 
+  const uploadIcon = async (file: File, name: string) => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${name}_${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+    const filePath = `settings/icons/${fileName}`;
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('filePath', filePath);
+    formData.append('bucket', 'public'); // Assuming there's a public bucket for assets
+
+    const res = await fetch('/api/upload', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.error || `Greška pri prijenosu ${name} ikone`);
+    }
+
+    return filePath;
+  };
+
   const handleTestEmail = async () => {
     setTestEmailLoading(true);
     setTestEmailSuccess(null);
@@ -59,19 +82,34 @@ export default function AdminSettingsForm({ initialSettings }: { initialSettings
     setSuccess(false);
 
     const formData = new FormData(e.currentTarget);
-    const updates = {
-      notification_emails: [formData.get('notification_emails') as string],
-      iban_recipient: formData.get('iban_recipient') as string,
-      iban_number: formData.get('iban_number') as string,
-      iban_bank: formData.get('iban_bank') as string,
-      phone: formData.get('phone') as string,
-      facebook_url: formData.get('facebook_url') as string,
-      instagram_url: formData.get('instagram_url') as string,
-      cancellation_days: parseInt(formData.get('cancellation_days') as string, 10),
-      final_payment_deadline_hours: parseInt(formData.get('final_payment_deadline_hours') as string, 10) * 24,
-    };
-
+    
     try {
+      const updates: any = {
+        notification_emails: [formData.get('notification_emails') as string],
+        iban_recipient: formData.get('iban_recipient') as string,
+        iban_number: formData.get('iban_number') as string,
+        iban_bank: formData.get('iban_bank') as string,
+        phone: formData.get('phone') as string,
+        facebook_url: formData.get('facebook_url') as string,
+        instagram_url: formData.get('instagram_url') as string,
+        cancellation_days: parseInt(formData.get('cancellation_days') as string, 10),
+        final_payment_deadline_hours: parseInt(formData.get('final_payment_deadline_hours') as string, 10) * 24,
+      };
+
+      // Handle Icon Uploads
+      const iconFields = [
+        'visa_icon', 'mastercard_icon', 'google_pay_icon', 
+        'apple_pay_icon', 'keks_pay_icon', 'aircash_icon'
+      ];
+
+      for (const field of iconFields) {
+        const file = formData.get(field) as File;
+        if (file && file.size > 0) {
+          const url = await uploadIcon(file, field);
+          updates[`${field}_url`] = url;
+        }
+      }
+
       const { error: updateError } = await supabase
         .from('app_settings')
         .upsert({
@@ -234,6 +272,43 @@ export default function AdminSettingsForm({ initialSettings }: { initialSettings
               className="w-full rounded-xl border border-zinc-300 px-4 py-2 focus:ring-indigo-500 focus:border-indigo-500"
             />
           </div>
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <h3 className="text-sm font-bold text-zinc-900">Logotipi plaćanja (Ikone)</h3>
+        <p className="text-xs text-zinc-500">Učitajte vlastite ikone ako se zadane ne prikazuju ispravno.</p>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-zinc-50 rounded-2xl border border-zinc-200">
+          {[
+            { id: 'visa_icon', label: 'Visa', current: initialSettings?.visa_icon_url },
+            { id: 'mastercard_icon', label: 'Mastercard', current: initialSettings?.mastercard_icon_url },
+            { id: 'google_pay_icon', label: 'Google Pay', current: initialSettings?.google_pay_icon_url },
+            { id: 'apple_pay_icon', label: 'Apple Pay', current: initialSettings?.apple_pay_icon_url },
+            { id: 'keks_pay_icon', label: 'KEKS Pay', current: initialSettings?.keks_pay_icon_url },
+            { id: 'aircash_icon', label: 'Aircash', current: initialSettings?.aircash_icon_url },
+          ].map((icon) => (
+            <div key={icon.id} className="space-y-2">
+              <label className="block text-xs font-medium text-zinc-700">{icon.label}</label>
+              <div className="flex items-center gap-3">
+                {icon.current && (
+                  <div className="w-10 h-10 bg-white rounded-lg border border-zinc-200 flex items-center justify-center p-1 overflow-hidden">
+                    <img 
+                      src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/public/${icon.current}`} 
+                      className="max-w-full max-h-full object-contain" 
+                      alt={icon.label} 
+                    />
+                  </div>
+                )}
+                <input
+                  type="file"
+                  name={icon.id}
+                  accept="image/*"
+                  className="flex-1 text-xs text-zinc-500 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+                />
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
