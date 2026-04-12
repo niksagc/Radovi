@@ -245,7 +245,7 @@ export default function PaymentOptions({ order: initialOrder, appSettings }: { o
               method === 'keks' ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50'
             }`}
           >
-            <div className="w-5 h-5 bg-red-600 rounded-full flex items-center justify-center text-[10px] text-white font-bold">K</div>
+            <img src="https://www.erstebank.hr/content/dam/hr/eb/www_erstebank_hr/slike/keks-pay/keks-pay-logo.png" className="h-5 object-contain" alt="KEKS Pay" />
             <span>KEKS Pay</span>
           </button>
 
@@ -255,7 +255,7 @@ export default function PaymentOptions({ order: initialOrder, appSettings }: { o
               method === 'aircash' ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50'
             }`}
           >
-            <div className="w-5 h-5 bg-indigo-600 rounded-full flex items-center justify-center text-[10px] text-white font-bold">A</div>
+            <img src="https://aircash.eu/wp-content/uploads/2021/03/aircash-logo-new.png" className="h-5 object-contain" alt="Aircash" />
             <span>Aircash</span>
           </button>
         </div>
